@@ -1,9 +1,8 @@
-
+/// <reference types="node" />
 export interface IDeviceQueriedProps {
     deviceParameters: IDeviceParameters;
     initialDeviceState: IDeviceState;
 }
-
 export interface IDeviceParameters {
     description: string;
     simultaneousCCT: boolean;
@@ -13,42 +12,35 @@ export interface IDeviceParameters {
     isEightByteProtocol: boolean;
     needsPowerCommand?: boolean;
 }
-
 export interface IReadWriteStatus {
     deviceWriteStatus: string;
     deviceReadInProgress: boolean;
 }
-
-export type IDeviceWriteStatus = {
-    ready: 'ready',
-    busy: 'busy',
-    pending: 'pending',
-}
-
-export type ColorMasks = {
-    white: 0x0F,
-    color: 0xF0,
-    both: 0xFF,
-}
-
+export declare type IDeviceWriteStatus = {
+    ready: 'ready';
+    busy: 'busy';
+    pending: 'pending';
+};
+export declare type ColorMasks = {
+    white: 0x0F;
+    color: 0xF0;
+    both: 0xFF;
+};
 export interface IDeviceDiscoveredProps {
     ipAddress: string;
     uniqueId: string;
     modelNumber: string;
 }
-
-export type IFailedDeviceProps = IDeviceDiscoveredProps & {
+export declare type IFailedDeviceProps = IDeviceDiscoveredProps & {
     latestScanTimestamp: number;
-}
-
+};
 export interface IDeviceState {
     LED: IDeviceCommand;
     controllerHardwareVersion?: number;
     controllerFirmwareVersion?: number;
     rawData: Buffer;
 }
-
-export type IDeviceProps = IDeviceQueriedProps & IDeviceDiscoveredProps & {
+export declare type IDeviceProps = IDeviceQueriedProps & IDeviceDiscoveredProps & {
     uniqueId: string;
     cachedIPAddress: string;
     displayName: string;
@@ -56,21 +48,18 @@ export type IDeviceProps = IDeviceQueriedProps & IDeviceDiscoveredProps & {
     lastKnownState?: IDeviceState;
     lightStateTemporary?: IDeviceState;
     activeController?: Object;
-}
-
+};
 export interface IDeviceCommand {
     isOn?: boolean;
     RGB?: IColorRGB;
     CCT?: IColorCCT;
     colorMask?: number;
 }
-
 export interface IColorRGB {
     red?: number;
     green?: number;
     blue?: number;
 }
-
 export interface IColorCCT {
     cctValue?: number;
     warmWhite?: number;

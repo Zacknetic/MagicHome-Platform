@@ -1,180 +1,180 @@
-import { ILightParameters, ControllerTypes } from './types';
+import { IDeviceParameters } from './types';
 
-const lightTypesMap: Map<number, ILightParameters> = new Map([
+const lightTypesMap: Map<number, IDeviceParameters> = new Map([
   [
     0x04,
     {
-      controllerLogicType: ControllerTypes.RGBWStrip,
       description: 'RGBW Simultaneous',
       simultaneousCCT: true,
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: null,
     },
   ],
   [
     0x06,
     {
-      controllerLogicType: ControllerTypes.RGBWStrip,
       description: 'RGBW Simultaneous',
       simultaneousCCT: true,
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: null,
     },
   ],
   [
     0x07,
     {
-      controllerLogicType: ControllerTypes.RGBWWStrip,
       description: 'RGBWW Simultaneous',
       simultaneousCCT: true,
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: false,
     },
   ],
   [
     0x09,
     {
-      controllerLogicType: ControllerTypes.CCTStrip,
       description: 'CCT Strip',
       simultaneousCCT: false,
       hasColor: false,
       hasCCT: true,
       hasBrightness: true,
+      isEightByteProtocol: false,
     },
   ],
   [
     0x21,
     {
-      controllerLogicType: ControllerTypes.DimmerStrip,
       description: 'Dimmer',
       simultaneousCCT: false,
       hasColor: false,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: null,
     },
   ],
   [
     0x25,
     {
-      controllerLogicType: ControllerTypes.RGBWWStrip,
       description: 'RGBWW Simultaneous',
       simultaneousCCT: true,
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: false,
     },
   ],
   [
     0x33,
     {
-      controllerLogicType: ControllerTypes.GRBStrip,
       description: 'GRB Strip',
       simultaneousCCT: true,
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: null,
     },
   ],
   [
     0x35,
     {
-      controllerLogicType: ControllerTypes.RGBWWBulb,
       description: 'RGBWW Non-Simultaneous',
       simultaneousCCT: false,
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: false,
     },
   ],
   [
     0x41,
     {
-      controllerLogicType: ControllerTypes.DimmerStrip,
       description: 'Dimmer',
       simultaneousCCT: false,
       hasColor: false,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: null,
     },
   ],
   [
     0x44,
     {
-      controllerLogicType: ControllerTypes.RGBWBulb,
       description: 'RGBW Non-Simultaneous',
       simultaneousCCT: false,
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: null,
     },
   ],
   [
     0x52,
     {
-      controllerLogicType: ControllerTypes.RGBWWBulb,
       description: 'RGBWW Non-Simultaneous',
       simultaneousCCT: false,
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: false,
     },
   ],
   [
     0x65,
     {
-      controllerLogicType: ControllerTypes.DimmerStrip,
       description: 'Dimmer',
       simultaneousCCT: false,
       hasColor: false,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: null,
     },
   ],
   [
     0x93,
     {
-      controllerLogicType: ControllerTypes.Switch,
       description: 'Power Socket',
       simultaneousCCT: false,
       hasColor: false,
       hasCCT: false,
       hasBrightness: false,
+      isEightByteProtocol: null,
     },
   ],
   [
     0x97,
     {
-      controllerLogicType: ControllerTypes.Switch,
       description: 'Power Socket',
       simultaneousCCT: false,
       hasColor: false,
       hasCCT: false,
       hasBrightness: false,
+      isEightByteProtocol: null,
     },
   ],
   [
     0xa1,
     {
-      controllerLogicType: ControllerTypes.RGBStrip,
       description: 'RGB Strip',
       simultaneousCCT: false,
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: null,
     },
   ],
   [
     0xa2,
     {
-      controllerLogicType: ControllerTypes.RGBStrip,
       description: 'RGB Strip',
       simultaneousCCT: false,
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
+      isEightByteProtocol: null,
     },
   ],
 ]);

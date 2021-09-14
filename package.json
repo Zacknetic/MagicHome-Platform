@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "echo \"error: no tests\" && exit 1"
+    "test": "node ./dist/index.js",
+    "watch": "npm run build && npm link && nodemon || exit 1"
   },
   "repository": {
     "type": "git",
@@ -21,12 +22,15 @@
   "author": "Zachary Avino",
   "license": "MIT",
   "dependencies": {
+    "@types/prompts": "^2.0.14",
     "color-convert": "^2.0.1",
     "dgram": "^1.0.1",
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
-    "magichome-core": "0.0.11",
-    "promise-queue": "^2.2.5"
+    "magichome-core": "0.0.12",
+    "promise-queue": "^2.2.5",
+    "prompt-sync": "^4.2.0",
+    "prompts": "^2.4.1"
   },
   "devDependencies": {
     "@types/node": "^14.17.15",
