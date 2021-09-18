@@ -179,22 +179,22 @@ const lightTypesMap: Map<number, IDeviceParameters> = new Map([
   ],
 ]);
 
-function getUniqueIdName(uniqueId:string, controllerLogicType:string | null):string{
+function getUniqueIdName(uniqueId: string, controllerLogicType: string | null): string {
   const uniqueIdTruc = uniqueId.slice(-6);
   let deviceType = 'LED';
-  if(controllerLogicType){
-    if( isType(controllerLogicType, 'bulb') ) {
+  if (controllerLogicType) {
+    if (isType(controllerLogicType, 'bulb')) {
       deviceType = 'Bulb';
-    } else if( isType(controllerLogicType, 'strip') ){
+    } else if (isType(controllerLogicType, 'strip')) {
       deviceType = 'Strip';
-    }else if( isType(controllerLogicType, 'switch') ){
+    } else if (isType(controllerLogicType, 'switch')) {
       deviceType = 'Switch';
     }
   }
   return `${deviceType} ${uniqueIdTruc}`;
 }
 
-function isType(a,b){
+function isType(a, b) {
   return a.toLowerCase().indexOf(b) > -1;
 }
 

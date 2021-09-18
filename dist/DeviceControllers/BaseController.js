@@ -90,7 +90,6 @@ class BaseController {
     }
     processCommand(deviceCommand) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log('THIS SHOULD BE NULL', this.bufferDeviceCommand);
             const deviceWriteStatus = this.deviceWriteStatus;
             const dummyCommand = {
                 isOn: true,

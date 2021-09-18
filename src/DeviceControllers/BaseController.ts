@@ -13,21 +13,12 @@ const OPTIMIZATION_SETTINGS = {
 }
 
 
-const { white, color, both }: types.ColorMasks = {
-  white: 0x0F,
-  color: 0xF0,
-  both: 0xFF,
-}
-
-const { ready, busy, pending }: types.IDeviceWriteStatus = {
-  ready: 'ready',
-  busy: 'busy',
-  pending: 'pending',
-}
-
-const COMMAND_POWER_ON = [0x71, 0x23, 0x0f];
-const COMMAND_POWER_OFF = [0x71, 0x24, 0x0f];
-
+const {
+  ColorMasks: { white, color, both },
+  DeviceWriteStatus: { ready, busy, pending },
+  PowerCommands: { COMMAND_POWER_OFF, COMMAND_POWER_ON },
+  DefaultCommand
+} = types;
 
 /**
  * Platform Accessory
@@ -88,13 +79,13 @@ export class BaseController {
 
   setWarmWhite(value: number) {
     value = Math.round(clamp(value, 0, 255));
-    const deviceCommand: types.IDeviceCommand = { CCT: { warmWhite: value } }
+    const deviceCommand: types.IDeviceCommand = { isOn: true, CCT: { warmWhite: value } }
     this.processCommand(deviceCommand);
   }
 
   async setColdWhite(value: number) {
     value = Math.round(clamp(value, 0, 255));
-    const deviceCommand: types.IDeviceCommand = { CCT: { coldWhite: value } }
+    const deviceCommand: types.IDeviceCommand = {isOn: true, CCT: { coldWhite: value } }
     await this.processCommand(deviceCommand);
   }
 
@@ -103,21 +94,7 @@ export class BaseController {
   }
 
   async processCommand(deviceCommand: types.IDeviceCommand) {
-    console.log('THIS SHOULD BE NULL', this.bufferDeviceCommand)
     const deviceWriteStatus = this.deviceWriteStatus
-    const dummyCommand: types.IDeviceCommand = {
-      isOn: true,
-      RGB: {
-        red: 0,
-        green: 0,
-        blue: 0,
-      },
-      CCT: {
-        warmWhite: 0,
-        coldWhite: 0
-      },
-      colorMask: both
-    }
 
     console.log(deviceWriteStatus);
     try {
@@ -141,7 +118,9 @@ export class BaseController {
         case pending:
           //console.log('deviceCommand on/off', deviceCommand.isOn)
           console.log('setting the pending command')
-          this.newColorCommand = _.merge(this.newColorCommand, deviceCommand)
+
+          if (deviceCommand.isOn !== false)
+            this.newColorCommand = _.merge(this.newColorCommand, deviceCommand)
           break;
         case busy:
           //console.log('deviceCommand on/off', deviceCommand.isOn)
@@ -157,58 +136,43 @@ export class BaseController {
   async writeStateToDevice(deviceCommand: types.IDeviceCommand, count = 0): Promise<string> {
     let timeout = 0;
     return new Promise(async (resolve, reject) => {
-      setTimeout(async() => {
-       
+      setTimeout(async () => {
+
         this.deviceWriteStatus = busy;
-      const dummyCommand: types.IDeviceCommand = {
-        isOn: false,
-        RGB: {
-          red: 0,
-          green: 0,
-          blue: 0,
-        },
-        CCT: {
-          warmWhite: 0,
-          coldWhite: 0
-        },
-        colorMask: both
-      }
 
-      //console.log('deviceCommand on/off', deviceCommand.isOn)
+        //console.log('deviceCommand on/off', deviceCommand.isOn)
 
-      deviceCommand = _.merge(dummyCommand, deviceCommand)
-      if(this.activeDevice.deviceParameters.needsPowerCommand){
-        timeout = OPTIMIZATION_SETTINGS.POWER_WAIT_TIME
-        this.send(COMMAND_POWER_ON);
-      }
-      if (count > 4) return;
-     // console.log(count);
-     setTimeout(async () => {
-          
- 
-      await this.prepareColorCommand(deviceCommand).then(async () => {
-        console.log(this.bufferDeviceCommand)
-        if (this.bufferDeviceCommand !== null) {
-          const tempBufferDeviceCommand = _.cloneDeep(this.bufferDeviceCommand)
-          this.bufferDeviceCommand = null
-          await this.writeStateToDevice(tempBufferDeviceCommand);
-          resolve('Discontinuing write validity as command buffer contains data.')
-        } else {
-
-          this.testValidState(deviceCommand).then(async (isEqual) => {
-            if (!isEqual) {
-              console.log('retrying color command')
-              await this.writeStateToDevice(deviceCommand, count + 1);
-            } else {
-              this.overwriteLocalState(deviceCommand);
-              resolve('success')
-            }
-          });
+        const sanitizedDeviceCommand = _.merge(DefaultCommand, deviceCommand)
+        if (this.activeDevice.deviceParameters.needsPowerCommand) {
+          timeout = OPTIMIZATION_SETTINGS.POWER_WAIT_TIME;
+          this.send(COMMAND_POWER_ON);
         }
+        if (count > 4) return;
+        // console.log(count);
+        setTimeout(async () => {
+          await this.prepareColorCommand(sanitizedDeviceCommand).then(async () => {
+            console.log(this.bufferDeviceCommand)
+            if (this.bufferDeviceCommand !== null) {
+              const tempBufferDeviceCommand = _.cloneDeep(this.bufferDeviceCommand)
+              this.bufferDeviceCommand = null
+              await this.writeStateToDevice(tempBufferDeviceCommand);
+              resolve('Discontinuing write validity as command buffer contains data.')
+            } else {
 
-      })
-    }, OPTIMIZATION_SETTINGS.INTRA_MESSAGE_TIME);
-  }, timeout);
+              this.testValidState(sanitizedDeviceCommand).then(async (isEqual) => {
+                if (!isEqual) {
+                  console.log('retrying color command')
+                  await this.writeStateToDevice(sanitizedDeviceCommand, count + 1);
+                } else {
+                  this.overwriteLocalState(sanitizedDeviceCommand);
+                  resolve('success')
+                }
+              });
+            }
+
+          })
+        }, OPTIMIZATION_SETTINGS.INTRA_MESSAGE_TIME);
+      }, timeout);
     });
   }//setColor
 
@@ -312,26 +276,26 @@ export class BaseController {
   async prepareColorCommand(deviceCommand: types.IDeviceCommand): Promise<string> {
     return new Promise(async (resolve, reject) => {
 
-    const { RGB: { red, green, blue }, CCT: { warmWhite, coldWhite }, colorMask } = deviceCommand;
-    const { isEightByteProtocol } = this.activeDevice.deviceParameters;
+      const { RGB: { red, green, blue }, CCT: { warmWhite, coldWhite }, colorMask } = deviceCommand;
+      const { isEightByteProtocol } = this.activeDevice.deviceParameters;
 
-    let command;
-    if (isEightByteProtocol) {
-      command = [0x31, red, green, blue, 0x00, colorMask, 0x0F]; //8th byte checksum calculated later in send()
-    } else {
-      command = [0x31, red, green, blue, warmWhite, coldWhite, colorMask, 0x0F]; //9 byte
-    }
-    //console.log('COMMAND', command)
-    const deviceResponse = this.send(command);
+      let command;
+      if (isEightByteProtocol) {
+        command = [0x31, red, green, blue, 0x00, colorMask, 0x0F]; //8th byte checksum calculated later in send()
+      } else {
+        command = [0x31, red, green, blue, warmWhite, coldWhite, colorMask, 0x0F]; //9 byte
+      }
+      //console.log('COMMAND', command)
+      const deviceResponse = this.send(command);
 
-    if (deviceResponse == undefined && this.activeDevice.deviceParameters.isEightByteProtocol === null) {
-      this.activeDevice.deviceParameters.isEightByteProtocol = true;
-      await this.prepareColorCommand(deviceCommand);
-    }
+      if (deviceResponse == undefined && this.activeDevice.deviceParameters.isEightByteProtocol === null) {
+        this.activeDevice.deviceParameters.isEightByteProtocol = true;
+        await this.prepareColorCommand(deviceCommand);
+      }
 
-    resolve( deviceResponse)
-    //this.logs.debug('Recieved the following response', output);
-  });
+      resolve(deviceResponse)
+      //this.logs.debug('Recieved the following response', output);
+    });
   } //send
 
   async send(command, useChecksum = true, _timeout = 50) {

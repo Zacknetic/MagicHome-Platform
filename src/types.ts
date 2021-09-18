@@ -19,16 +19,10 @@ export interface IReadWriteStatus {
     deviceReadInProgress: boolean;
 }
 
-export type IDeviceWriteStatus = {
-    ready: 'ready',
-    busy: 'busy',
-    pending: 'pending',
-}
-
-export type ColorMasks = {
-    white: 0x0F,
-    color: 0xF0,
-    both: 0xFF,
+export interface IDeviceDiscoveredProps {
+    ipAddress: string;
+    uniqueId: string;
+    modelNumber: string;
 }
 
 export interface IDeviceDiscoveredProps {
@@ -56,6 +50,36 @@ export type IDeviceProps = IDeviceQueriedProps & IDeviceDiscoveredProps & {
     lastKnownState?: IDeviceState;
     lightStateTemporary?: IDeviceState;
     activeController?: Object;
+}
+
+export const DeviceWriteStatus = {
+    ready: 'ready',
+    busy: 'busy',
+    pending: 'pending',
+}
+
+export const ColorMasks = {
+    white: 0x0F,
+    color: 0xF0,
+    both: 0xFF,
+}
+
+export const PowerCommands = {
+    COMMAND_POWER_ON: [0x71, 0x23, 0x0f],
+    COMMAND_POWER_OFF: [0x71, 0x24, 0x0f],
+}
+
+export const DefaultCommand = {
+    RGB: {
+        red: 0,
+        green: 0,
+        blue: 0,
+    },
+    CCT: {
+        warmWhite: 0,
+        coldWhite: 0
+    },
+    colorMask: 0
 }
 
 export interface IDeviceCommand {
