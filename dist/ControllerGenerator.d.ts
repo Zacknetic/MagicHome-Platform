@@ -1,12 +1,16 @@
 import * as types from './types';
 export declare class ControllerGenerator {
-    activeDevices: Map<string, types.IDeviceProps>;
+    activeDevices: Map<string, types.IDeviceInformation>;
     inactiveDeviceQueue: types.IFailedDeviceProps[];
-    constructor(activeDevices?: Map<string, types.IDeviceProps>, inactiveDeviceQueue?: types.IFailedDeviceProps[]);
-    createControllers(): Promise<Map<string, types.IDeviceProps>>;
-    discoverDevices(): Promise<types.IDeviceDiscoveredProps[] | null>;
-    createController(discoveredDevice: types.IDeviceDiscoveredProps): Promise<void>;
-    getState(ipAddress: any, _timeout?: number): Promise<types.IDeviceState | null>;
-    assignController(initialState: types.IDeviceState): Promise<types.IDeviceQueriedProps | null>;
-    generateNewDevice(discoveredDevice: types.IDeviceDiscoveredProps, deviceQueryData: types.IDeviceQueriedProps): Promise<types.IDeviceProps | null>;
+    constructor(activeDevices?: Map<string, types.IDeviceInformation>, inactiveDeviceQueue?: types.IFailedDeviceProps[]);
+    discoverControllers(): Promise<Map<string, types.IDeviceInformation>>;
+    createCustomControllers(customCompleteDevices: types.CustomCompleteDeviceProps[] | types.CustomCompleteDeviceProps): Promise<Map<string, types.IDeviceInformation>>;
+    private createCustomController;
+    private discoverDevices;
+    private createController;
+    getState(ipAddress: string, _timeout?: number): Promise<types.IDeviceState | null>;
+    private assignController;
+    private generateNewDevice;
+    getActiveDevices(uniqueId?: string): Map<string, types.IDeviceInformation> | types.IDeviceInformation;
+    sendDirectCommand(directCommand: types.DirectCommand, commandOptions?: types.ICommandOptions): Promise<void>;
 }

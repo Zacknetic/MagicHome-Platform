@@ -1,6 +1,6 @@
-import { IDeviceParameters } from './types';
+import { IDeviceAPI } from './types';
 
-const lightTypesMap: Map<number, IDeviceParameters> = new Map([
+const lightTypesMap: Map<number, IDeviceAPI> = new Map([
   [
     0x04,
     {

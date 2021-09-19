@@ -1,7 +1,13 @@
 /// <reference types="node" />
-export interface IDeviceQueriedProps {
-    deviceParameters: IDeviceParameters;
-    initialDeviceState: IDeviceState;
+export interface IProtoDeviceProps {
+    ipAddress: string;
+    uniqueId: string;
+    modelNumber: string;
+}
+export interface ICustomProtoDevice {
+    ipAddress: string;
+    uniqueId?: string;
+    modelNumber?: string;
 }
 export interface IDeviceParameters {
     description: string;
@@ -12,27 +18,13 @@ export interface IDeviceParameters {
     isEightByteProtocol: boolean;
     needsPowerCommand?: boolean;
 }
-export interface IReadWriteStatus {
-    deviceWriteStatus: string;
-    deviceReadInProgress: boolean;
-}
-export declare type IDeviceWriteStatus = {
-    ready: 'ready';
-    busy: 'busy';
-    pending: 'pending';
-};
-export declare type ColorMasks = {
-    white: 0x0F;
-    color: 0xF0;
-    both: 0xFF;
-};
-export interface IDeviceDiscoveredProps {
-    ipAddress: string;
+export declare type IDeviceInformation = IDeviceQueriedProps & IProtoDeviceProps & {
     uniqueId: string;
-    modelNumber: string;
-}
-export declare type IFailedDeviceProps = IDeviceDiscoveredProps & {
-    latestScanTimestamp: number;
+    cachedIPAddress: string;
+    displayName: string;
+    restartsSinceSeen: number;
+    deviceState?: IDeviceState;
+    deviceStateTemporary?: IDeviceState;
 };
 export interface IDeviceState {
     LED: IDeviceCommand;
@@ -40,20 +32,33 @@ export interface IDeviceState {
     controllerFirmwareVersion?: number;
     rawData: Buffer;
 }
-export declare type IDeviceProps = IDeviceQueriedProps & IDeviceDiscoveredProps & {
-    uniqueId: string;
-    cachedIPAddress: string;
-    displayName: string;
-    restartsSinceSeen: number;
-    lastKnownState?: IDeviceState;
-    lightStateTemporary?: IDeviceState;
-    activeController?: Object;
+export interface IDeviceQueriedProps {
+    deviceParameters: IDeviceParameters;
+    initialDeviceState: IDeviceState;
+}
+export interface IReadWriteStatus {
+    deviceWriteStatus: string;
+    deviceReadInProgress: boolean;
+    devicePowerCommand: boolean;
+}
+export interface CustomCompleteDeviceProps {
+    deviceParameters?: IDeviceParameters;
+    protoDevice?: ICustomProtoDevice;
+}
+export declare type DirectCommand = IDeviceCommand & ICustomProtoDevice;
+export declare type IFailedDeviceProps = IProtoDeviceProps & {
+    latestScanTimestamp: number;
 };
 export interface IDeviceCommand {
     isOn?: boolean;
     RGB?: IColorRGB;
     CCT?: IColorCCT;
     colorMask?: number;
+}
+export interface ICommandOptions {
+    timeoutMS?: number;
+    deviceParameters: IDeviceParameters;
+    verifyState?: boolean;
 }
 export interface IColorRGB {
     red?: number;
@@ -65,3 +70,40 @@ export interface IColorCCT {
     warmWhite?: number;
     coldWhite?: number;
 }
+export declare const DeviceWriteStatus: {
+    ready: string;
+    busy: string;
+    pending: string;
+};
+export declare const ColorMasks: {
+    white: number;
+    color: number;
+    both: number;
+};
+export declare const PowerCommands: {
+    COMMAND_POWER_ON: number[];
+    COMMAND_POWER_OFF: number[];
+};
+export declare const DefaultCommand: {
+    isOn: boolean;
+    RGB: {
+        red: number;
+        green: number;
+        blue: number;
+    };
+    CCT: {
+        warmWhite: number;
+        coldWhite: number;
+    };
+    colorMask: number;
+};
+export declare const DefaultDevice: {
+    ipAddress: string;
+    uniqueId: string;
+    modelNumber: string;
+};
+export declare const OPTIMIZATION_SETTINGS: {
+    INTRA_MESSAGE_TIME: number;
+    POWER_WAIT_TIME: number;
+    STATE_RETRY_WAIT_TIME: number;
+};

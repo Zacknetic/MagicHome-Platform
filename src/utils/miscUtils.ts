@@ -72,15 +72,3 @@ export function speedToDelay(speed: never) {
   const clamped = clamp(speed, 0, 100);
   return 30 - (clamped / 100) * 30 + 1;
 }
-
-export function deviceNeedsPowerComand(discoveredDevice: types.IDeviceDiscoveredProps, deviceQueryData: types.IDeviceQueriedProps): boolean {
-  const matchingFirmwareVersions = [2, 3, 4, 5, 8]
-  const firmwareVersion = deviceQueryData.initialDeviceState.controllerFirmwareVersion;
-  const modelNumber = discoveredDevice.modelNumber;
-
-  let needsPowerCommand = false;
-
-  if (matchingFirmwareVersions[firmwareVersion] || (firmwareVersion == 1 && modelNumber.includes('HF-LPB100-ZJ200'))) needsPowerCommand = true;
-
-  return needsPowerCommand;
-}

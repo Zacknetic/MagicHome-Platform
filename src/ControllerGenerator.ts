@@ -1,38 +1,40 @@
 import * as types from './types';
+import { v1 as UUID } from 'uuid';
 import { scan, Transport } from 'magichome-core';
-import { parseDeviceState, deviceNeedsPowerComand } from './utils/miscUtils'
+import { parseDeviceState } from './utils/miscUtils'
 import { lightTypesMap } from './LightMap';
 import { BaseController } from './DeviceControllers/BaseController';
+
+const { DefaultDevice } = types;
 
 export class ControllerGenerator {
 
     constructor(
-        public activeDevices: Map<string, types.IDeviceProps> = new Map(),
+        public activeDevices: Map<string, BaseController> = new Map(),
         public inactiveDeviceQueue: types.IFailedDeviceProps[] = [],
     ) {
 
     }
 
-    async createControllers() {
-        return new Promise<Map<string, types.IDeviceProps> | null>(async (resolve, reject) => {
+    public async discoverControllers(): Promise<Map<string, BaseController>> {
+        return new Promise<Map<string, BaseController> | null>(async (resolve, reject) => {
 
-            const discoveredDevices: types.IDeviceDiscoveredProps[] = await this.discoverDevices();
+            const discoveredDevices: types.IProtoDevice[] = await this.discoverDevices();
             Promise.all(
                 discoveredDevices.map(async (discoveredDevice) => {
-                    await this.createController(discoveredDevice);
+                    await this.instantiateController(discoveredDevice);
 
                 })
             ).finally(() => {
                 resolve(this.activeDevices)
             })
-
         })
     }
 
-    async discoverDevices(): Promise<types.IDeviceDiscoveredProps[] | null> {
+    private async discoverDevices(): Promise<types.IProtoDevice[] | null> {
         return new Promise(async (resolve, reject) => {
 
-            let discoveredDevices: types.IDeviceDiscoveredProps[] = await scan(2000);
+            let discoveredDevices: types.IProtoDevice[] = await scan(2000);
             for (let scans = 0; scans < 5; scans++) {
 
                 if (discoveredDevices.length > 0) break;
@@ -42,90 +44,79 @@ export class ControllerGenerator {
             if (discoveredDevices.length > 0) {
                 resolve(discoveredDevices);
             } else {
-                reject('No devices')
+                reject('No devices found')
             }
         });
     }
 
-    async createController(discoveredDevice: types.IDeviceDiscoveredProps) {
-        if (!this.activeDevices[discoveredDevice.uniqueId]) {
-            return new Promise((resolve) => {
-                resolve(this.getState(discoveredDevice.ipAddress));
-            }).then((initialState: types.IDeviceState) => {
-                return new Promise((resolve) => {
-                    resolve(this.assignController(initialState));
+    public async createCustomControllers(customCompleteDevices: types.CustomCompleteDeviceProps[] | types.CustomCompleteDeviceProps): Promise<Map<string, BaseController>> {
+
+        if (customCompleteDevices instanceof Array) {
+            return new Promise<Map<string, BaseController> | null>(async (resolve, reject) => {
+                Promise.all(
+                    customCompleteDevices.map(async (customCompleteDevice) => {
+                        await this.createCustomController(customCompleteDevice);
+                    })
+                ).finally(() => {
+                    resolve(this.activeDevices)
                 })
-            }).then((deviceQueryData: types.IDeviceQueriedProps) => {
-                return new Promise((resolve) => {
-                    resolve(this.generateNewDevice(discoveredDevice, deviceQueryData))
-                });
-            }).then((newDevice: types.IDeviceProps) => {
-                this.activeDevices[discoveredDevice.uniqueId] = newDevice;
-            }).catch(error => {
-                console.log(error);
-            });
+
+            })
+        } else {
+            this.createCustomController(customCompleteDevices);
+        }
+    }
+
+    private async createCustomController(customCompleteDevice: types.CustomCompleteDeviceProps) {
+
+        const { protoDevice, deviceAPI } = customCompleteDevice;
+
+        if (!protoDevice.ipAddress) {
+            return;
+        }
+
+        if (!protoDevice.uniqueId) {
+            protoDevice.uniqueId = UUID();
+        }
+
+        //this.activeDevices[protoDevice.uniqueId] = 
+    }
+
+    private async instantiateController(protoDevice: types.IProtoDevice) {
+        if (!this.activeDevices[protoDevice.uniqueId]) {
+            
+           this.activeDevices[protoDevice.uniqueId] = await this.generateNewDevice(protoDevice);
         } else {
             console.log('controller exists')
-            //controller already exists, ensure ip and object are up to date
+            this.activeDevices[protoDevice.uniqueId] = protoDevice.ipAddress;
         }
 
     }
 
-    async getState(ipAddress, _timeout = 500): Promise<types.IDeviceState | null> {
+    private async generateNewDevice(protoDevice: types.IProtoDevice, deviceAPI: types.IDeviceAPI = null): Promise<BaseController | null> {
         return new Promise(async (resolve, reject) => {
-            const transport = new Transport(ipAddress);
-            if (typeof ipAddress !== 'string') {
-                reject(`Cannot determine controller because invalid IP address. Device:' ${ipAddress}`);
-            }
-            try {
-                let scans = 0, data: Buffer;
 
-                while (data == null && scans < 5) {
-                    data = await transport.getState(_timeout);
-                    scans++;
-                }
-                if (data) {
-                    const state = await parseDeviceState(data);
-                    resolve(state);
-                } else {
-                    reject('[DeviceControllers](GetState) unable to retrieve data.');
-                }
-            } catch (error) {
-                reject(`[DeviceControllers](GetState) failed:', ${error}`);
-            }
+            const deviceController = new BaseController(protoDevice, deviceAPI);
+            await deviceController.initializeController();
+            resolve(deviceController);
         });
     }
 
-    async assignController(initialState: types.IDeviceState): Promise<types.IDeviceQueriedProps | null> {
-        return new Promise((resolve, reject) => {
-            if (lightTypesMap.has(initialState.controllerHardwareVersion)) {
-                const deviceParameters: types.IDeviceParameters = lightTypesMap.get(initialState.controllerHardwareVersion);
-                const deviceQueryData: types.IDeviceQueriedProps = { deviceParameters: deviceParameters, initialDeviceState: initialState }
-
-
-                resolve(deviceQueryData);
-            } else {
-                reject(null);
-            }
-        });
+    public getActiveDevices(uniqueId?: string): Map<string, BaseController> | BaseController {
+        if (uniqueId) {
+            return this.activeDevices[uniqueId];
+        } else {
+            return this.activeDevices;
+        }
     }
 
-    async generateNewDevice(discoveredDevice: types.IDeviceDiscoveredProps, deviceQueryData: types.IDeviceQueriedProps): Promise<types.IDeviceProps | null> {
-        return new Promise((resolve, reject) => {
+    public async sendDirectCommand(directCommand: types.DirectCommand, commandOptions?: types.ICommandOptions) {
 
-            const newProps = {
-                UUID: discoveredDevice.uniqueId,
-                cachedIPAddress: discoveredDevice.ipAddress,
-                displayName: deviceQueryData.deviceParameters.description,
-                restartsSinceSeen: 0,
-                lastKnownState: deviceQueryData.initialDeviceState
-            }
-            deviceQueryData.deviceParameters.needsPowerCommand = deviceNeedsPowerComand(discoveredDevice, deviceQueryData)
+        const customCompleteDevice: types.CustomCompleteDeviceProps = { protoDevice: directCommand, deviceAPI: commandOptions.deviceApi }
+        const controller = this.createCustomControllers([customCompleteDevice])[0];
 
-            const newDevice: types.IDeviceProps = Object.assign(newProps, deviceQueryData, discoveredDevice);
-            const deviceController = new BaseController(newDevice);
-            newDevice.activeController = deviceController; //chicken or the egg... which came first?
-            resolve(newDevice);
-        });
+        controller.activeDevice.setAllValues(directCommand, commandOptions.verifyState);
+
     }
+
 }

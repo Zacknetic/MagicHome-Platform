@@ -2,10 +2,13 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es2015",
+    "lib": [
+      "es5", "es6", "dom", "dom.iterable"
+    ],
     "declaration": true,
     "outDir": "./dist"
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
   ]
 }

@@ -5,26 +5,30 @@ import * as types from '../types';
  * Each accessory may expose multiple services of different service types.
  */
 export declare class BaseController {
-    protected readonly activeDevice: types.IDeviceProps;
+    protected readonly deviceInformation: types.IDeviceInformation;
     protected transport: any;
     protected deviceWriteStatus: any;
+    protected devicePowerCommand: any;
     protected newColorCommand: types.IDeviceCommand;
     protected bufferDeviceCommand: types.IDeviceCommand;
+    protected deviceStateTemporary: types.IDeviceState;
     protected deviceState: types.IDeviceState;
-    protected lightStateTemporary: types.IDeviceState;
-    constructor(activeDevice: types.IDeviceProps);
-    setOn(value: boolean): void;
+    constructor(deviceInformation: types.IDeviceInformation);
+    setOn(value: boolean): Promise<void>;
     setRed(value: number): Promise<void>;
-    setGreen(value: number): void;
-    setBlue(value: number): void;
-    setWarmWhite(value: number): void;
+    setGreen(value: number): Promise<void>;
+    setBlue(value: number): Promise<void>;
+    setWarmWhite(value: number): Promise<void>;
     setColdWhite(value: number): Promise<void>;
-    setAllValues(deviceCommand: types.IDeviceCommand): Promise<void>;
-    processCommand(deviceCommand: types.IDeviceCommand): Promise<void>;
-    writeStateToDevice(deviceCommand: types.IDeviceCommand, count?: number): Promise<string>;
-    testValidState(deviceCommand: types.IDeviceCommand): Promise<boolean>;
+    setAllValues(deviceCommand: types.IDeviceCommand, verifyState?: boolean): Promise<void>;
+    processCommand(deviceCommand: types.IDeviceCommand, verifyState?: boolean): Promise<void>;
+    writeStateToDevice(deviceCommand: types.IDeviceCommand, verifyState?: boolean, count?: number): Promise<string>;
+    testValidState(deviceCommand: types.IDeviceCommand): Promise<{
+        isValid: any;
+        deviceState: any;
+    }>;
     stateHasSoftEquality(deviceStateA: types.IDeviceCommand, deviceStateB: types.IDeviceCommand): boolean;
-    overwriteLocalState(deviceCommand: types.IDeviceCommand): void;
+    overwriteLocalState(deviceCommand: types.IDeviceCommand, deviceState: types.IDeviceState): void;
     fetchState(): Promise<types.IDeviceState>;
     flashEffect(): void;
     prepareColorCommand(deviceCommand: types.IDeviceCommand): Promise<string>;

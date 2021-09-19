@@ -1,1 +1,1 @@
-export {};
+export { ControllerGenerator } from './ControllerGenerator';

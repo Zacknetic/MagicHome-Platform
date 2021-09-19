@@ -13,23 +13,9 @@ exports.BaseController = void 0;
 const miscUtils_1 = require("../utils/miscUtils");
 const lodash_1 = require("lodash");
 const magichome_core_1 = require("magichome-core");
-const OPTIMIZATION_SETTINGS = {
-    INTRA_MESSAGE_TIME: 20,
-    POWER_WAIT_TIME: 50,
-    STATE_RETRY_WAIT_TIME: 350,
-};
-const { white, color, both } = {
-    white: 0x0F,
-    color: 0xF0,
-    both: 0xFF,
-};
-const { ready, busy, pending } = {
-    ready: 'ready',
-    busy: 'busy',
-    pending: 'pending',
-};
-const COMMAND_POWER_ON = [0x71, 0x23, 0x0f];
-const COMMAND_POWER_OFF = [0x71, 0x24, 0x0f];
+//import { getLogs } from '../utils/logger';
+const types = require("../types");
+const { ColorMasks: { white, color, both }, DeviceWriteStatus: { ready, busy, pending }, PowerCommands: { COMMAND_POWER_OFF, COMMAND_POWER_ON }, DefaultCommand, OPTIMIZATION_SETTINGS: { INTRA_MESSAGE_TIME, POWER_WAIT_TIME, STATE_RETRY_WAIT_TIME } } = types;
 /**
  * Platform Accessory
  * An instance of this class is created for each accessory your platform registers
@@ -39,20 +25,27 @@ class BaseController {
     // logs = getLogs();
     //=================================================
     // Start Constructor //
-    constructor(activeDevice) {
-        this.activeDevice = activeDevice;
-        this.newColorCommand = null;
-        this.bufferDeviceCommand = null;
-        this.transport = new magichome_core_1.Transport(activeDevice.cachedIPAddress);
-        this.deviceState = activeDevice.lastKnownState;
-        this.lightStateTemporary = activeDevice.lightStateTemporary;
+    constructor(deviceInformation) {
+        this.deviceInformation = deviceInformation;
+        this.newColorCommand = DefaultCommand;
+        this.bufferDeviceCommand = DefaultCommand;
+        this.transport = new magichome_core_1.Transport(deviceInformation.cachedIPAddress);
+        this.deviceState = deviceInformation.deviceState;
+        this.deviceStateTemporary = deviceInformation.deviceStateTemporary;
         this.deviceWriteStatus = ready;
     }
     //=================================================
     // End Constructor //
     setOn(value) {
-        const deviceCommand = { isOn: value };
-        this.processCommand(deviceCommand);
+        return __awaiter(this, void 0, void 0, function* () {
+            const baseCommand = { isOn: value };
+            let deviceCommand;
+            if (this.deviceWriteStatus === ready) {
+                this.devicePowerCommand = true;
+                deviceCommand = Object.assign(Object.assign({}, this.deviceState.LED), baseCommand);
+                yield this.processCommand(deviceCommand);
+            }
+        });
     }
     setRed(value) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -62,73 +55,65 @@ class BaseController {
         });
     }
     setGreen(value) {
-        value = Math.round((0, miscUtils_1.clamp)(value, 0, 255));
-        const deviceCommand = { isOn: true, RGB: { green: value } };
-        this.processCommand(deviceCommand);
+        return __awaiter(this, void 0, void 0, function* () {
+            value = Math.round((0, miscUtils_1.clamp)(value, 0, 255));
+            const deviceCommand = { isOn: true, RGB: { green: value } };
+            this.processCommand(deviceCommand);
+        });
     }
     setBlue(value) {
-        value = Math.round((0, miscUtils_1.clamp)(value, 0, 255));
-        const deviceCommand = { isOn: true, RGB: { blue: value } };
-        this.processCommand(deviceCommand);
+        return __awaiter(this, void 0, void 0, function* () {
+            value = Math.round((0, miscUtils_1.clamp)(value, 0, 255));
+            const deviceCommand = { isOn: true, RGB: { blue: value } };
+            this.processCommand(deviceCommand);
+        });
     }
     setWarmWhite(value) {
-        value = Math.round((0, miscUtils_1.clamp)(value, 0, 255));
-        const deviceCommand = { CCT: { warmWhite: value } };
-        this.processCommand(deviceCommand);
+        return __awaiter(this, void 0, void 0, function* () {
+            value = Math.round((0, miscUtils_1.clamp)(value, 0, 255));
+            const deviceCommand = { isOn: true, CCT: { warmWhite: value } };
+            this.processCommand(deviceCommand);
+        });
     }
     setColdWhite(value) {
         return __awaiter(this, void 0, void 0, function* () {
             value = Math.round((0, miscUtils_1.clamp)(value, 0, 255));
-            const deviceCommand = { CCT: { coldWhite: value } };
+            const deviceCommand = { isOn: true, CCT: { coldWhite: value } };
             yield this.processCommand(deviceCommand);
         });
     }
-    setAllValues(deviceCommand) {
+    setAllValues(deviceCommand, verifyState = true) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.processCommand(deviceCommand);
+            yield this.processCommand(deviceCommand, verifyState);
         });
     }
-    processCommand(deviceCommand) {
+    processCommand(deviceCommand, verifyState = true) {
         return __awaiter(this, void 0, void 0, function* () {
             const deviceWriteStatus = this.deviceWriteStatus;
-            const dummyCommand = {
-                isOn: true,
-                RGB: {
-                    red: 0,
-                    green: 0,
-                    blue: 0,
-                },
-                CCT: {
-                    warmWhite: 0,
-                    coldWhite: 0
-                },
-                colorMask: both
-            };
-            console.log(deviceWriteStatus);
             try {
                 switch (deviceWriteStatus) {
                     case ready:
                         this.deviceWriteStatus = pending;
                         this.newColorCommand = deviceCommand;
-                        yield this.writeStateToDevice(this.newColorCommand).then((param) => {
-                            this.newColorCommand = null;
+                        yield this.writeStateToDevice(this.newColorCommand, verifyState).then((param) => {
+                            this.newColorCommand = DefaultCommand;
+                            this.devicePowerCommand = false;
                             this.deviceWriteStatus = ready;
-                            console.log(param);
                         }).catch((error) => {
-                            console.log('something failed');
-                            this.newColorCommand = null;
-                            this.bufferDeviceCommand = null;
+                            console.log('something failed: ', error);
+                            this.newColorCommand = DefaultCommand;
+                            this.bufferDeviceCommand = DefaultCommand;
+                            this.devicePowerCommand = false;
                             this.deviceWriteStatus = ready;
                         });
                         break;
                     case pending:
-                        //console.log('deviceCommand on/off', deviceCommand.isOn)
-                        console.log('setting the pending command');
-                        this.newColorCommand = lodash_1._.merge(this.newColorCommand, deviceCommand);
+                        if (deviceCommand.isOn !== false)
+                            this.newColorCommand = lodash_1._.merge(this.newColorCommand, deviceCommand);
                         break;
                     case busy:
-                        //console.log('deviceCommand on/off', deviceCommand.isOn)
-                        this.bufferDeviceCommand = lodash_1._.merge(this.bufferDeviceCommand, deviceCommand);
+                        if (deviceCommand.isOn !== false)
+                            this.bufferDeviceCommand = lodash_1._.merge(this.bufferDeviceCommand, deviceCommand);
                         break;
                 }
             }
@@ -136,57 +121,42 @@ class BaseController {
             }
         });
     }
-    writeStateToDevice(deviceCommand, count = 0) {
+    writeStateToDevice(deviceCommand, verifyState = true, count = 0) {
         return __awaiter(this, void 0, void 0, function* () {
             let timeout = 0;
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                     this.deviceWriteStatus = busy;
-                    const dummyCommand = {
-                        isOn: false,
-                        RGB: {
-                            red: 0,
-                            green: 0,
-                            blue: 0,
-                        },
-                        CCT: {
-                            warmWhite: 0,
-                            coldWhite: 0
-                        },
-                        colorMask: both
-                    };
-                    //console.log('deviceCommand on/off', deviceCommand.isOn)
-                    deviceCommand = lodash_1._.merge(dummyCommand, deviceCommand);
-                    if (this.activeDevice.deviceParameters.needsPowerCommand) {
-                        timeout = OPTIMIZATION_SETTINGS.POWER_WAIT_TIME;
+                    const sanitizedDeviceCommand = lodash_1._.merge(DefaultCommand, deviceCommand);
+                    if (this.deviceInformation.deviceParameters.needsPowerCommand && sanitizedDeviceCommand.isOn) {
+                        timeout = POWER_WAIT_TIME;
                         this.send(COMMAND_POWER_ON);
                     }
                     if (count > 4)
                         return;
-                    // console.log(count);
-                    setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                        yield this.prepareColorCommand(deviceCommand).then(() => __awaiter(this, void 0, void 0, function* () {
-                            console.log(this.bufferDeviceCommand);
-                            if (this.bufferDeviceCommand !== null) {
-                                const tempBufferDeviceCommand = lodash_1._.cloneDeep(this.bufferDeviceCommand);
-                                this.bufferDeviceCommand = null;
-                                yield this.writeStateToDevice(tempBufferDeviceCommand);
-                                resolve('Discontinuing write validity as command buffer contains data.');
-                            }
-                            else {
-                                this.testValidState(deviceCommand).then((isEqual) => __awaiter(this, void 0, void 0, function* () {
-                                    if (!isEqual) {
-                                        console.log('retrying color command');
-                                        yield this.writeStateToDevice(deviceCommand, count + 1);
-                                    }
-                                    else {
-                                        this.overwriteLocalState(deviceCommand);
-                                        resolve('success');
-                                    }
-                                }));
-                            }
-                        }));
-                    }), OPTIMIZATION_SETTINGS.INTRA_MESSAGE_TIME);
+                    if (verifyState) {
+                        setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                            yield this.prepareColorCommand(sanitizedDeviceCommand).then(() => __awaiter(this, void 0, void 0, function* () {
+                                if (this.bufferDeviceCommand !== DefaultCommand) {
+                                    const tempBufferDeviceCommand = lodash_1._.cloneDeep(this.bufferDeviceCommand);
+                                    this.bufferDeviceCommand = DefaultCommand;
+                                    yield this.writeStateToDevice(tempBufferDeviceCommand);
+                                    resolve('Discontinuing write validity as command buffer contains data.');
+                                }
+                                else {
+                                    this.testValidState(sanitizedDeviceCommand).then(({ isValid, deviceState }) => __awaiter(this, void 0, void 0, function* () {
+                                        if (!isValid) {
+                                            yield this.writeStateToDevice(sanitizedDeviceCommand, verifyState, count + 1);
+                                        }
+                                        else {
+                                            this.overwriteLocalState(sanitizedDeviceCommand, deviceState);
+                                            resolve('State Successfully Written');
+                                        }
+                                    }));
+                                }
+                            }));
+                        }), INTRA_MESSAGE_TIME);
+                    }
                 }), timeout);
             }));
         });
@@ -197,29 +167,36 @@ class BaseController {
                 setTimeout(() => __awaiter(this, void 0, void 0, function* () {
                     yield this.fetchState().then((deviceState) => {
                         const isValid = this.stateHasSoftEquality(deviceCommand, deviceState.LED);
-                        resolve(isValid);
+                        resolve({ isValid, deviceState });
                     });
-                }), OPTIMIZATION_SETTINGS.STATE_RETRY_WAIT_TIME);
+                }), STATE_RETRY_WAIT_TIME);
             }));
         });
     }
     stateHasSoftEquality(deviceStateA, deviceStateB) {
         try {
             let isEqual = false;
-            if (lodash_1._.isEqual(lodash_1._.omit(deviceStateA, ['colorMask']), (lodash_1._.omit(deviceStateB, ['colorMask'])))) {
-                //console.log('wrong state!')
+            if (this.devicePowerCommand) {
+                if (deviceStateA.isOn === deviceStateB.isOn) {
+                    isEqual = true;
+                }
+            }
+            else if (lodash_1._.isEqual(lodash_1._.omit(deviceStateA, ['colorMask']), (lodash_1._.omit(deviceStateB, ['colorMask'])))) {
                 isEqual = true;
             }
-            //console.log('OLD STATE:\n', deviceStateA)
-            //console.log('\nNEWSTATE:\n', deviceStateB)
             return isEqual;
         }
         catch (error) {
             //this.logs.error('getState() error: ', error);
         }
     }
-    overwriteLocalState(deviceCommand) {
-        Object.assign(this.deviceState.LED, deviceCommand);
+    overwriteLocalState(deviceCommand, deviceState) {
+        if (this.devicePowerCommand) {
+            Object.assign(this.deviceState.LED, deviceState);
+        }
+        else {
+            Object.assign(this.deviceState.LED, deviceCommand);
+        }
     }
     fetchState() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -235,8 +212,6 @@ class BaseController {
             return deviceState;
         });
     }
-    //=================================================
-    // End State Get/Set //
     //=================================================
     // Start LightEffects //
     flashEffect() {
@@ -263,28 +238,31 @@ class BaseController {
         //   }
         // }, 300);
     } //flashEffect
-    //=================================================
-    // End LightEffects //
     prepareColorCommand(deviceCommand) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                const { RGB: { red, green, blue }, CCT: { warmWhite, coldWhite }, colorMask } = deviceCommand;
-                const { isEightByteProtocol } = this.activeDevice.deviceParameters;
-                let command;
-                if (isEightByteProtocol) {
-                    command = [0x31, red, green, blue, 0x00, colorMask, 0x0F]; //8th byte checksum calculated later in send()
+                if (this.devicePowerCommand) {
+                    const deviceResponse = this.send(deviceCommand.isOn ? COMMAND_POWER_ON : COMMAND_POWER_OFF);
+                    resolve(deviceResponse);
                 }
                 else {
-                    command = [0x31, red, green, blue, warmWhite, coldWhite, colorMask, 0x0F]; //9 byte
+                    const { RGB: { red, green, blue }, CCT: { warmWhite, coldWhite }, colorMask } = deviceCommand;
+                    const { isEightByteProtocol } = this.deviceInformation.deviceParameters;
+                    let command;
+                    if (isEightByteProtocol) {
+                        command = [0x31, red, green, blue, 0x00, colorMask, 0x0F]; //8th byte checksum calculated later in send()
+                    }
+                    else {
+                        command = [0x31, red, green, blue, warmWhite, coldWhite, colorMask, 0x0F]; //9 byte
+                    }
+                    const deviceResponse = this.send(command);
+                    if (deviceResponse == undefined && this.deviceInformation.deviceParameters.isEightByteProtocol === null) {
+                        this.deviceInformation.deviceParameters.isEightByteProtocol = true;
+                        yield this.prepareColorCommand(deviceCommand);
+                    }
+                    resolve(deviceResponse);
+                    //this.logs.debug('Recieved the following response', output);
                 }
-                //console.log('COMMAND', command)
-                const deviceResponse = this.send(command);
-                if (deviceResponse == undefined && this.activeDevice.deviceParameters.isEightByteProtocol === null) {
-                    this.activeDevice.deviceParameters.isEightByteProtocol = true;
-                    yield this.prepareColorCommand(deviceCommand);
-                }
-                resolve(deviceResponse);
-                //this.logs.debug('Recieved the following response', output);
             }));
         });
     } //send
@@ -296,11 +274,11 @@ class BaseController {
         });
     }
     cacheCurrentLightState() {
-        this.lightStateTemporary = this.deviceState;
+        this.deviceStateTemporary = this.deviceState;
     }
     restoreCachedLightState() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.deviceState = this.lightStateTemporary;
+            this.deviceState = this.deviceStateTemporary;
             //this.processCommand(both);
         });
     }

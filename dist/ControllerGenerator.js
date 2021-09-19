@@ -10,16 +10,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ControllerGenerator = void 0;
+const types = require("./types");
+const uuid_1 = require("uuid");
 const magichome_core_1 = require("magichome-core");
 const miscUtils_1 = require("./utils/miscUtils");
 const LightMap_1 = require("./LightMap");
 const BaseController_1 = require("./DeviceControllers/BaseController");
+const { DefaultDevice } = types;
 class ControllerGenerator {
     constructor(activeDevices = new Map(), inactiveDeviceQueue = []) {
         this.activeDevices = activeDevices;
         this.inactiveDeviceQueue = inactiveDeviceQueue;
     }
-    createControllers() {
+    discoverControllers() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 const discoveredDevices = yield this.discoverDevices();
@@ -29,6 +32,46 @@ class ControllerGenerator {
                     resolve(this.activeDevices);
                 });
             }));
+        });
+    }
+    createCustomControllers(customCompleteDevices) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (customCompleteDevices instanceof Array) {
+                return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    Promise.all(customCompleteDevices.map((customCompleteDevice) => __awaiter(this, void 0, void 0, function* () {
+                        yield this.createCustomController(customCompleteDevice);
+                    }))).finally(() => {
+                        resolve(this.activeDevices);
+                    });
+                }));
+            }
+            else {
+                this.createCustomController(customCompleteDevices);
+            }
+        });
+    }
+    createCustomController(customCompleteDevice) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { protoDevice, deviceParameters } = customCompleteDevice;
+            console.log("PROTODEVICE", protoDevice);
+            console.log("deviceParameters", deviceParameters);
+            if (!protoDevice.ipAddress) {
+                return;
+            }
+            if (!protoDevice.uniqueId) {
+                protoDevice.uniqueId = (0, uuid_1.v1)();
+            }
+            if (!customCompleteDevice.hasOwnProperty('deviceParameters')) {
+                const autoDevice = Object.assign(Object.assign({}, DefaultDevice), protoDevice);
+                yield this.createController(autoDevice);
+            }
+            else {
+                const initialDeviceState = yield this.getState(protoDevice.ipAddress);
+                const deviceQueryData = { deviceParameters, initialDeviceState };
+                const autoDevice = Object.assign(Object.assign({}, DefaultDevice), protoDevice);
+                const newDevice = yield this.generateNewDevice(autoDevice, deviceQueryData);
+                this.activeDevices[newDevice.uniqueId] = newDevice;
+            }
         });
     }
     discoverDevices() {
@@ -49,28 +92,28 @@ class ControllerGenerator {
             }));
         });
     }
-    createController(discoveredDevice) {
+    createController(protoDevice) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.activeDevices[discoveredDevice.uniqueId]) {
+            if (!this.activeDevices[protoDevice.uniqueId]) {
                 return new Promise((resolve) => {
-                    resolve(this.getState(discoveredDevice.ipAddress));
+                    resolve(this.getState(protoDevice.ipAddress));
                 }).then((initialState) => {
                     return new Promise((resolve) => {
                         resolve(this.assignController(initialState));
                     });
                 }).then((deviceQueryData) => {
                     return new Promise((resolve) => {
-                        resolve(this.generateNewDevice(discoveredDevice, deviceQueryData));
+                        resolve(this.generateNewDevice(protoDevice, deviceQueryData));
                     });
                 }).then((newDevice) => {
-                    this.activeDevices[discoveredDevice.uniqueId] = newDevice;
+                    this.activeDevices[protoDevice.uniqueId] = newDevice;
                 }).catch(error => {
                     console.log(error);
                 });
             }
             else {
                 console.log('controller exists');
-                //controller already exists, ensure ip and object are up to date
+                this.activeDevices[protoDevice.uniqueId].cachedIPAddress = protoDevice.ipAddress;
             }
         });
     }
@@ -115,22 +158,36 @@ class ControllerGenerator {
             });
         });
     }
-    generateNewDevice(discoveredDevice, deviceQueryData) {
+    generateNewDevice(protoDevice, deviceQueryData) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
                 const newProps = {
-                    UUID: discoveredDevice.uniqueId,
-                    cachedIPAddress: discoveredDevice.ipAddress,
+                    UUID: protoDevice.uniqueId,
+                    cachedIPAddress: protoDevice.ipAddress,
                     displayName: deviceQueryData.deviceParameters.description,
                     restartsSinceSeen: 0,
                     lastKnownState: deviceQueryData.initialDeviceState
                 };
-                deviceQueryData.deviceParameters.needsPowerCommand = (0, miscUtils_1.deviceNeedsPowerComand)(discoveredDevice, deviceQueryData);
-                const newDevice = Object.assign(newProps, deviceQueryData, discoveredDevice);
-                const deviceController = new BaseController_1.BaseController(newDevice);
-                newDevice.activeController = deviceController; //chicken or the egg... which came first?
-                resolve(newDevice);
+                deviceQueryData.deviceParameters.needsPowerCommand = (0, miscUtils_1.deviceNeedsPowerComand)(protoDevice, deviceQueryData);
+                const deviceInformation = Object.assign(newProps, deviceQueryData, protoDevice);
+                const deviceController = new BaseController_1.BaseController(deviceInformation);
+                resolve(deviceController);
             });
+        });
+    }
+    getActiveDevices(uniqueId) {
+        if (uniqueId) {
+            return this.activeDevices[uniqueId];
+        }
+        else {
+            return this.activeDevices;
+        }
+    }
+    sendDirectCommand(directCommand, commandOptions) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const customCompleteDevice = { protoDevice: directCommand, deviceParameters: commandOptions.deviceParameters };
+            const controller = this.createCustomControllers([customCompleteDevice])[0];
+            controller.activeDevice.setAllValues(directCommand, commandOptions.verifyState);
         });
     }
 }
