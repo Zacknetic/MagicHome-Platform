@@ -4,5 +4,5 @@
   ],
   "ext": "ts",
   "ignore": [],
-  "exec": "tsc && node ./dist/index.js"
+  "exec": "tsc && node --trace-warnings ./dist/index.js"
 }

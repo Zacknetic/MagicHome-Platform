@@ -88,6 +88,7 @@ const lightTypesMap = new Map([
             hasCCT: false,
             hasBrightness: true,
             isEightByteProtocol: false,
+            needsPowerComand: null
         },
     ],
     [
@@ -109,7 +110,8 @@ const lightTypesMap = new Map([
             hasColor: true,
             hasCCT: false,
             hasBrightness: true,
-            isEightByteProtocol: null,
+            isEightByteProtocol: true,
+            needsPowerComand: null
         },
     ],
     [
@@ -121,6 +123,7 @@ const lightTypesMap = new Map([
             hasCCT: false,
             hasBrightness: true,
             isEightByteProtocol: false,
+            needsPowerComand: null
         },
     ],
     [

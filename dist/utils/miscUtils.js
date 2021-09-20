@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deviceNeedsPowerComand = exports.speedToDelay = exports.delayToSpeed = exports.loadJson = exports.parseJson = exports.parseDeviceState = exports.clamp = exports.checksum = void 0;
+exports.speedToDelay = exports.delayToSpeed = exports.loadJson = exports.parseJson = exports.parseDeviceState = exports.clamp = exports.checksum = void 0;
 const fs_1 = require("fs");
 //=================================================
 // Start checksum //
@@ -66,13 +66,3 @@ function speedToDelay(speed) {
     return 30 - (clamped / 100) * 30 + 1;
 }
 exports.speedToDelay = speedToDelay;
-function deviceNeedsPowerComand(discoveredDevice, deviceQueryData) {
-    const matchingFirmwareVersions = [2, 3, 4, 5, 8];
-    const firmwareVersion = deviceQueryData.initialDeviceState.controllerFirmwareVersion;
-    const modelNumber = discoveredDevice.modelNumber;
-    let needsPowerCommand = false;
-    if (matchingFirmwareVersions[firmwareVersion] || (firmwareVersion == 1 && modelNumber.includes('HF-LPB100-ZJ200')))
-        needsPowerCommand = true;
-    return needsPowerCommand;
-}
-exports.deviceNeedsPowerComand = deviceNeedsPowerComand;

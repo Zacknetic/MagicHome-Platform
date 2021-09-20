@@ -1,11 +1,6 @@
 import * as types from '../types';
-/**
- * Platform Accessory
- * An instance of this class is created for each accessory your platform registers
- * Each accessory may expose multiple services of different service types.
- */
 export declare class BaseController {
-    protected readonly deviceInformation: types.IDeviceInformation;
+    protected protoDevice: types.IProtoDevice;
     protected transport: any;
     protected deviceWriteStatus: any;
     protected devicePowerCommand: any;
@@ -13,26 +8,31 @@ export declare class BaseController {
     protected bufferDeviceCommand: types.IDeviceCommand;
     protected deviceStateTemporary: types.IDeviceState;
     protected deviceState: types.IDeviceState;
-    constructor(deviceInformation: types.IDeviceInformation);
-    setOn(value: boolean): Promise<void>;
-    setRed(value: number): Promise<void>;
-    setGreen(value: number): Promise<void>;
-    setBlue(value: number): Promise<void>;
-    setWarmWhite(value: number): Promise<void>;
-    setColdWhite(value: number): Promise<void>;
-    setAllValues(deviceCommand: types.IDeviceCommand, verifyState?: boolean): Promise<void>;
-    processCommand(deviceCommand: types.IDeviceCommand, verifyState?: boolean): Promise<void>;
-    writeStateToDevice(deviceCommand: types.IDeviceCommand, verifyState?: boolean, count?: number): Promise<string>;
-    testValidState(deviceCommand: types.IDeviceCommand): Promise<{
-        isValid: any;
-        deviceState: any;
-    }>;
-    stateHasSoftEquality(deviceStateA: types.IDeviceCommand, deviceStateB: types.IDeviceCommand): boolean;
-    overwriteLocalState(deviceCommand: types.IDeviceCommand, deviceState: types.IDeviceState): void;
+    protected deviceInformation: types.IDeviceInformation;
+    protected deviceAPI: types.IDeviceAPI;
+    constructor(protoDevice: types.IProtoDevice);
+    setOn(value: boolean, verifyState?: boolean): Promise<string>;
+    setRed(value: number, verifyState?: boolean): Promise<types.IDeviceState>;
+    setGreen(value: number, verifyState?: boolean): Promise<types.IDeviceState>;
+    setBlue(value: number, verifyState?: boolean): Promise<types.IDeviceState>;
+    setWarmWhite(value: number, verifyState?: boolean): Promise<types.IDeviceState>;
+    setColdWhite(value: number, verifyState?: boolean): Promise<types.IDeviceState>;
+    setAllValues(deviceCommand: types.IDeviceCommand, verifyState?: boolean): Promise<types.IDeviceState>;
+    private prepareCommand;
+    private processCommand;
+    private writeStateToDevice;
+    private testValidState;
+    private stateHasSoftEquality;
+    private overwriteLocalState;
+    private prepareColorCommand;
     fetchState(): Promise<types.IDeviceState>;
-    flashEffect(): void;
-    prepareColorCommand(deviceCommand: types.IDeviceCommand): Promise<string>;
-    send(command: any, useChecksum?: boolean, _timeout?: number): Promise<any>;
+    private queryState;
+    private send;
     cacheCurrentLightState(): void;
-    restoreCachedLightState(): Promise<void>;
+    restoreCachedLightState(verifyState?: boolean): Promise<types.IDeviceState>;
+    private assignAPI;
+    reInitializeController(deviceAPI?: types.IDeviceAPI): Promise<unknown>;
+    private needsPowerComand;
+    getCachedDeviceInformation(): types.IDeviceInformation;
+    getCachedState(): types.IDeviceState;
 }

@@ -1,5 +1,5 @@
 /// <reference types="node" />
-export interface IProtoDeviceProps {
+export interface IProtoDevice {
     ipAddress: string;
     uniqueId: string;
     modelNumber: string;
@@ -9,7 +9,7 @@ export interface ICustomProtoDevice {
     uniqueId?: string;
     modelNumber?: string;
 }
-export interface IDeviceParameters {
+export interface IDeviceAPI {
     description: string;
     simultaneousCCT: boolean;
     hasColor: boolean;
@@ -18,35 +18,27 @@ export interface IDeviceParameters {
     isEightByteProtocol: boolean;
     needsPowerCommand?: boolean;
 }
-export declare type IDeviceInformation = IDeviceQueriedProps & IProtoDeviceProps & {
-    uniqueId: string;
-    cachedIPAddress: string;
+export interface IDeviceInformation {
+    deviceAPI: IDeviceAPI;
+    protoDevice: IProtoDevice;
+    deviceState: IDeviceState;
+}
+export interface IControllerInformation {
     displayName: string;
     restartsSinceSeen: number;
-    deviceState?: IDeviceState;
-    deviceStateTemporary?: IDeviceState;
-};
+}
 export interface IDeviceState {
     LED: IDeviceCommand;
     controllerHardwareVersion?: number;
     controllerFirmwareVersion?: number;
     rawData: Buffer;
 }
-export interface IDeviceQueriedProps {
-    deviceParameters: IDeviceParameters;
-    initialDeviceState: IDeviceState;
-}
-export interface IReadWriteStatus {
-    deviceWriteStatus: string;
-    deviceReadInProgress: boolean;
-    devicePowerCommand: boolean;
-}
 export interface CustomCompleteDeviceProps {
-    deviceParameters?: IDeviceParameters;
+    deviceAPI?: IDeviceAPI;
     protoDevice?: ICustomProtoDevice;
 }
 export declare type DirectCommand = IDeviceCommand & ICustomProtoDevice;
-export declare type IFailedDeviceProps = IProtoDeviceProps & {
+export declare type IFailedDeviceProps = IProtoDevice & {
     latestScanTimestamp: number;
 };
 export interface IDeviceCommand {
@@ -57,8 +49,9 @@ export interface IDeviceCommand {
 }
 export interface ICommandOptions {
     timeoutMS?: number;
-    deviceParameters: IDeviceParameters;
+    deviceApi?: IDeviceAPI;
     verifyState?: boolean;
+    colorMask?: typeof ColorMasks;
 }
 export interface IColorRGB {
     red?: number;
@@ -95,7 +88,6 @@ export declare const DefaultCommand: {
         warmWhite: number;
         coldWhite: number;
     };
-    colorMask: number;
 };
 export declare const DefaultDevice: {
     ipAddress: string;

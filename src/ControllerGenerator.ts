@@ -1,12 +1,11 @@
 import * as types from './types';
 import { v1 as UUID } from 'uuid';
-import { scan, Transport } from 'magichome-core';
-import { parseDeviceState } from './utils/miscUtils'
-import { lightTypesMap } from './LightMap';
+import { scan } from 'magichome-core';
 import { BaseController } from './DeviceControllers/BaseController';
 
-const { DefaultDevice } = types;
-
+/**
+ * 
+ */
 export class ControllerGenerator {
 
     constructor(
@@ -16,6 +15,12 @@ export class ControllerGenerator {
 
     }
 
+    /**
+     * class function discoverControllers
+     * 
+     * Scan the network for compatible MagicHome devices,
+     * @returns a map of <uniqueId, ControllerObject> pairs.
+     */
     public async discoverControllers(): Promise<Map<string, BaseController>> {
         return new Promise<Map<string, BaseController> | null>(async (resolve, reject) => {
 
@@ -49,6 +54,17 @@ export class ControllerGenerator {
         });
     }
 
+    /**
+     * class function createCustomControllers
+     * 
+     * Creates compatible MagicHome controllers from a custom parameters
+     * Stores controllers as a map of <uniqueId, BaseController> pairs
+     * 
+     * @param customCompleteDevices array of objects containign setup data
+     * @param customCompleteDevice single object containing setup data
+     * 
+     * @returns a map of <uniqueId, BaseController> pairs or a single BaseController
+     */
     public async createCustomControllers(customCompleteDevices: types.CustomCompleteDeviceProps[] | types.CustomCompleteDeviceProps): Promise<Map<string, BaseController>> {
 
         if (customCompleteDevices instanceof Array) {
@@ -96,12 +112,20 @@ export class ControllerGenerator {
     private async generateNewDevice(protoDevice: types.IProtoDevice, deviceAPI: types.IDeviceAPI = null): Promise<BaseController | null> {
         return new Promise(async (resolve, reject) => {
 
-            const deviceController = new BaseController(protoDevice, deviceAPI);
-            await deviceController.initializeController();
+            const deviceController = new BaseController(protoDevice);
+            await deviceController.reInitializeController(deviceAPI);
             resolve(deviceController);
         });
     }
 
+    /**
+     * class function getActiveDevices
+     * 
+     * Returns a map of <uniqueId, BaseController> pairs or;
+     * If provided a valid uniqueId, returns a single BaseController
+     * @param uniqueId (optional)
+     * @returns 
+     */
     public getActiveDevices(uniqueId?: string): Map<string, BaseController> | BaseController {
         if (uniqueId) {
             return this.activeDevices[uniqueId];
@@ -110,6 +134,12 @@ export class ControllerGenerator {
         }
     }
 
+    /**
+     * class function sendDirectCommand
+     * 
+     * @param directCommand
+     * @param commandOptions (optional)
+     */
     public async sendDirectCommand(directCommand: types.DirectCommand, commandOptions?: types.ICommandOptions) {
 
         const customCompleteDevice: types.CustomCompleteDeviceProps = { protoDevice: directCommand, deviceAPI: commandOptions.deviceApi }

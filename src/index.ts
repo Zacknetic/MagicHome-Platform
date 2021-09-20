@@ -1,2 +1,2 @@
 export { ControllerGenerator } from './ControllerGenerator';
-import * as types from '../src/types'
+export { ICustomProtoDevice, CustomCompleteDeviceProps, DirectCommand, ICommandOptions, IDeviceAPI} from './types'

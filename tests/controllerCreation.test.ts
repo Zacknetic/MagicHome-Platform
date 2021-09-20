@@ -1,7 +1,7 @@
 import { ControllerGenerator } from '../src/ControllerGenerator';
 import * as types from '../src/types'
 const controllerGenerator = new ControllerGenerator();
-
+const deviceList = [];
 
 
 const controllerTestCases =
@@ -38,7 +38,7 @@ test(`making new controllers`, async () => {
     const controllers = await controllerGenerator.discoverControllers();
     //console.log(controllers)
     let input = '';
-    const deviceList = [];
+  
     let count = 1;
 
     for (const [key, activeDevice] of Object.entries(controllers)) {
@@ -48,20 +48,22 @@ test(`making new controllers`, async () => {
 
     }
 
-    deviceList.forEach(async controller => {
+});
+
+test(`making new controllers`, async () => {
+    deviceList.forEach(controller => {
         //console.log(controller)
         //controller.setRed(200);
         // for(let i =0; i < 5; i++){
-            controller.setWarmWhite(255)
+            controller.setRed(255)
         //     setTimeout(() => {
         //         controller.setWarmWhite(0)
         //     }, 500);
         // }
-
     });
 
-   
 });
+
 
 // async function makeDevices() {
 
@@ -158,3 +160,83 @@ test(`making new controllers`, async () => {
 // }
 
 // main();
+
+/*
+export { ControllerGenerator } from './ControllerGenerator';
+
+const controllerGenerator = new ControllerGenerator();
+const deviceList = [];
+
+async function makeControllers() {
+    return new Promise<BaseController[]>(async (resolve, reject) => {
+
+
+        const controllers: Map<string, BaseController> = await controllerGenerator.discoverControllers();
+
+        let input = '';
+
+        let count = 1;
+
+        for (const [key, activeDevice] of Object.entries(controllers)) {
+            // if(activeDevice.deviceAPI.description === 'RGBWW Simultaneous'){
+            deviceList[count] = activeDevice;
+            count++;
+            //  }
+
+
+        }
+
+
+        await animate()
+    })
+    // const refreshRate = 1000 / 60;
+    // const maxXPosition = 255;
+    // let speedX = 1;
+    // let positionX = 0;
+
+    // setInterval(() => {
+    //   positionX = positionX + speedX;
+    //   if (positionX > maxXPosition || positionX < 0) {
+    //     speedX = speedX * (-1);
+    //   }
+    //   controller.setRed(positionX, false);
+    // }, refreshRate);
+
+
+}
+
+let state = 0
+
+function animate() {
+    setInterval(() => {
+        if (state > 2) state = 0;
+        console.log(state)
+        deviceList.forEach(async (controller) => {
+
+            switch (state) {
+                case 0:
+                    controller.setRed(1);
+                    break;
+                case 1:
+                    controller.setGreen(1)
+                    break;
+                case 2:
+                    controller.setBlue(1)
+                    break;
+                default:
+                    break;
+            }
+
+        })
+        state++;
+
+
+    }, 5000);
+}
+
+function main() {
+    makeControllers();
+
+}
+
+main();*/

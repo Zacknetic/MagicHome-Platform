@@ -7,4 +7,3 @@ export declare function parseJson<T>(value: string, replacement: T): T;
 export declare function loadJson<T>(file: string, replacement: T): T;
 export declare function delayToSpeed(delay: never): number;
 export declare function speedToDelay(speed: never): number;
-export declare function deviceNeedsPowerComand(discoveredDevice: types.IProtoDeviceProps, deviceQueryData: types.IDeviceQueriedProps): boolean;

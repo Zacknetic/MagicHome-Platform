@@ -1,5 +1,3 @@
-import { BaseController } from "./DeviceControllers/BaseController"
-
 /*----------------------[Device State]----------------------*/
 export interface IProtoDevice {
     ipAddress: string;
@@ -14,6 +12,7 @@ export interface ICustomProtoDevice {
 }
 
 export interface IDeviceAPI {
+    description: string;
     simultaneousCCT: boolean;
     hasColor: boolean;
     hasCCT: boolean;
@@ -25,6 +24,7 @@ export interface IDeviceAPI {
 export interface IDeviceInformation {
     deviceAPI: IDeviceAPI;
     protoDevice: IProtoDevice;
+    deviceState: IDeviceState
 }
 
 export interface IControllerInformation {
@@ -44,11 +44,11 @@ export interface IDeviceState {
 //     initialDeviceState: IDeviceState;
 // }
 
-export interface IReadWriteStatus {
-    deviceWriteStatus: string;
-    deviceReadInProgress: boolean;
-    devicePowerCommand: boolean;
-}
+// export interface IReadWriteStatus {
+//     deviceWriteStatus: string;
+//     deviceReadInProgress: boolean;
+//     devicePowerCommand: boolean;
+// }
 
 export interface CustomCompleteDeviceProps {
     deviceAPI?: IDeviceAPI,
@@ -70,8 +70,9 @@ export interface IDeviceCommand {
 
 export interface ICommandOptions {
     timeoutMS?: number;
-    deviceApi: IDeviceAPI;
+    deviceApi?: IDeviceAPI;
     verifyState?: boolean;
+    colorMask?: typeof ColorMasks;
 }
 
 export interface IColorRGB {
@@ -114,8 +115,7 @@ export const DefaultCommand = {
     CCT: {
         warmWhite: 0,
         coldWhite: 0
-    },
-    colorMask: ColorMasks.both
+    }
 }
 
 export const DefaultDevice = {
@@ -125,7 +125,7 @@ export const DefaultDevice = {
 }
 
 export const OPTIMIZATION_SETTINGS = {
-    INTRA_MESSAGE_TIME: 20,
-    POWER_WAIT_TIME: 50,
-    STATE_RETRY_WAIT_TIME: 400,
+    INTRA_MESSAGE_TIME: 10,
+    POWER_WAIT_TIME: 100,
+    STATE_RETRY_WAIT_TIME: 300,
 }

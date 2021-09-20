@@ -10,13 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ControllerGenerator = void 0;
-const types = require("./types");
 const uuid_1 = require("uuid");
 const magichome_core_1 = require("magichome-core");
-const miscUtils_1 = require("./utils/miscUtils");
-const LightMap_1 = require("./LightMap");
 const BaseController_1 = require("./DeviceControllers/BaseController");
-const { DefaultDevice } = types;
 class ControllerGenerator {
     constructor(activeDevices = new Map(), inactiveDeviceQueue = []) {
         this.activeDevices = activeDevices;
@@ -27,10 +23,28 @@ class ControllerGenerator {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 const discoveredDevices = yield this.discoverDevices();
                 Promise.all(discoveredDevices.map((discoveredDevice) => __awaiter(this, void 0, void 0, function* () {
-                    yield this.createController(discoveredDevice);
+                    yield this.instantiateController(discoveredDevice);
                 }))).finally(() => {
                     resolve(this.activeDevices);
                 });
+            }));
+        });
+    }
+    discoverDevices() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                let discoveredDevices = yield (0, magichome_core_1.scan)(2000);
+                for (let scans = 0; scans < 5; scans++) {
+                    if (discoveredDevices.length > 0)
+                        break;
+                    discoveredDevices = yield (0, magichome_core_1.scan)(2000);
+                }
+                if (discoveredDevices.length > 0) {
+                    resolve(discoveredDevices);
+                }
+                else {
+                    reject('No devices found');
+                }
             }));
         });
     }
@@ -52,127 +66,34 @@ class ControllerGenerator {
     }
     createCustomController(customCompleteDevice) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { protoDevice, deviceParameters } = customCompleteDevice;
-            console.log("PROTODEVICE", protoDevice);
-            console.log("deviceParameters", deviceParameters);
+            const { protoDevice, deviceAPI } = customCompleteDevice;
             if (!protoDevice.ipAddress) {
                 return;
             }
             if (!protoDevice.uniqueId) {
                 protoDevice.uniqueId = (0, uuid_1.v1)();
             }
-            if (!customCompleteDevice.hasOwnProperty('deviceParameters')) {
-                const autoDevice = Object.assign(Object.assign({}, DefaultDevice), protoDevice);
-                yield this.createController(autoDevice);
-            }
-            else {
-                const initialDeviceState = yield this.getState(protoDevice.ipAddress);
-                const deviceQueryData = { deviceParameters, initialDeviceState };
-                const autoDevice = Object.assign(Object.assign({}, DefaultDevice), protoDevice);
-                const newDevice = yield this.generateNewDevice(autoDevice, deviceQueryData);
-                this.activeDevices[newDevice.uniqueId] = newDevice;
-            }
+            //this.activeDevices[protoDevice.uniqueId] = 
         });
     }
-    discoverDevices() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                let discoveredDevices = yield (0, magichome_core_1.scan)(2000);
-                for (let scans = 0; scans < 5; scans++) {
-                    if (discoveredDevices.length > 0)
-                        break;
-                    discoveredDevices = yield (0, magichome_core_1.scan)(2000);
-                }
-                if (discoveredDevices.length > 0) {
-                    resolve(discoveredDevices);
-                }
-                else {
-                    reject('No devices');
-                }
-            }));
-        });
-    }
-    createController(protoDevice) {
+    instantiateController(protoDevice) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.activeDevices[protoDevice.uniqueId]) {
-                return new Promise((resolve) => {
-                    resolve(this.getState(protoDevice.ipAddress));
-                }).then((initialState) => {
-                    return new Promise((resolve) => {
-                        resolve(this.assignController(initialState));
-                    });
-                }).then((deviceQueryData) => {
-                    return new Promise((resolve) => {
-                        resolve(this.generateNewDevice(protoDevice, deviceQueryData));
-                    });
-                }).then((newDevice) => {
-                    this.activeDevices[protoDevice.uniqueId] = newDevice;
-                }).catch(error => {
-                    console.log(error);
-                });
+                this.activeDevices[protoDevice.uniqueId] = yield this.generateNewDevice(protoDevice);
             }
             else {
                 console.log('controller exists');
-                this.activeDevices[protoDevice.uniqueId].cachedIPAddress = protoDevice.ipAddress;
+                this.activeDevices[protoDevice.uniqueId] = protoDevice.ipAddress;
             }
         });
     }
-    getState(ipAddress, _timeout = 500) {
+    generateNewDevice(protoDevice, deviceAPI = null) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                const transport = new magichome_core_1.Transport(ipAddress);
-                if (typeof ipAddress !== 'string') {
-                    reject(`Cannot determine controller because invalid IP address. Device:' ${ipAddress}`);
-                }
-                try {
-                    let scans = 0, data;
-                    while (data == null && scans < 5) {
-                        data = yield transport.getState(_timeout);
-                        scans++;
-                    }
-                    if (data) {
-                        const state = yield (0, miscUtils_1.parseDeviceState)(data);
-                        resolve(state);
-                    }
-                    else {
-                        reject('[DeviceControllers](GetState) unable to retrieve data.');
-                    }
-                }
-                catch (error) {
-                    reject(`[DeviceControllers](GetState) failed:', ${error}`);
-                }
-            }));
-        });
-    }
-    assignController(initialState) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
-                if (LightMap_1.lightTypesMap.has(initialState.controllerHardwareVersion)) {
-                    const deviceParameters = LightMap_1.lightTypesMap.get(initialState.controllerHardwareVersion);
-                    const deviceQueryData = { deviceParameters: deviceParameters, initialDeviceState: initialState };
-                    resolve(deviceQueryData);
-                }
-                else {
-                    reject(null);
-                }
-            });
-        });
-    }
-    generateNewDevice(protoDevice, deviceQueryData) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => {
-                const newProps = {
-                    UUID: protoDevice.uniqueId,
-                    cachedIPAddress: protoDevice.ipAddress,
-                    displayName: deviceQueryData.deviceParameters.description,
-                    restartsSinceSeen: 0,
-                    lastKnownState: deviceQueryData.initialDeviceState
-                };
-                deviceQueryData.deviceParameters.needsPowerCommand = (0, miscUtils_1.deviceNeedsPowerComand)(protoDevice, deviceQueryData);
-                const deviceInformation = Object.assign(newProps, deviceQueryData, protoDevice);
-                const deviceController = new BaseController_1.BaseController(deviceInformation);
+                const deviceController = new BaseController_1.BaseController(protoDevice);
+                yield deviceController.reInitializeController(deviceAPI);
                 resolve(deviceController);
-            });
+            }));
         });
     }
     getActiveDevices(uniqueId) {
@@ -185,7 +106,7 @@ class ControllerGenerator {
     }
     sendDirectCommand(directCommand, commandOptions) {
         return __awaiter(this, void 0, void 0, function* () {
-            const customCompleteDevice = { protoDevice: directCommand, deviceParameters: commandOptions.deviceParameters };
+            const customCompleteDevice = { protoDevice: directCommand, deviceAPI: commandOptions.deviceApi };
             const controller = this.createCustomControllers([customCompleteDevice])[0];
             controller.activeDevice.setAllValues(directCommand, commandOptions.verifyState);
         });

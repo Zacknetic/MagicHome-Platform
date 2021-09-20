@@ -26,8 +26,7 @@ exports.DefaultCommand = {
     CCT: {
         warmWhite: 0,
         coldWhite: 0
-    },
-    colorMask: exports.ColorMasks.both
+    }
 };
 exports.DefaultDevice = {
     ipAddress: '',
@@ -35,7 +34,7 @@ exports.DefaultDevice = {
     modelNumber: 'unknown',
 };
 exports.OPTIMIZATION_SETTINGS = {
-    INTRA_MESSAGE_TIME: 20,
-    POWER_WAIT_TIME: 50,
-    STATE_RETRY_WAIT_TIME: 400,
+    INTRA_MESSAGE_TIME: 10,
+    POWER_WAIT_TIME: 100,
+    STATE_RETRY_WAIT_TIME: 300,
 };
