@@ -11,6 +11,9 @@ export interface ICustomProtoDevice {
     modelNumber?: string;
 }
 
+/**
+ * DeviceAPI
+ */
 export interface IDeviceAPI {
     description: string;
     simultaneousCCT: boolean;
@@ -36,7 +39,7 @@ export interface IDeviceState {
     LED: IDeviceCommand;
     controllerHardwareVersion?: number;
     controllerFirmwareVersion?: number;
-    rawData: Buffer;
+    rawData?: Buffer;
 }
 
 // export interface IDeviceQueriedProps {
@@ -73,6 +76,7 @@ export interface ICommandOptions {
     deviceApi?: IDeviceAPI;
     verifyState?: boolean;
     colorMask?: typeof ColorMasks;
+    manualPowerCommand?: boolean
 }
 
 export interface IColorRGB {
@@ -127,5 +131,5 @@ export const DefaultDevice = {
 export const OPTIMIZATION_SETTINGS = {
     INTRA_MESSAGE_TIME: 10,
     POWER_WAIT_TIME: 100,
-    STATE_RETRY_WAIT_TIME: 300,
+    STATE_RETRY_WAIT_TIME: 500,
 }

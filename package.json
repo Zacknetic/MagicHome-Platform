@@ -28,6 +28,7 @@
     "lodash.debounce": "^4.0.8",
     "magichome-core": ">0.0.12",
     "promise-queue": "^2.2.5",
+    "promise-retry": "^2.0.1",
     "prompt-sync": "^4.2.0",
     "prompts": "^2.4.1",
     "uuid": "^8.3.2"
