@@ -1,3 +1,46 @@
+/*----------------------[Constants]----------------------*/
+export const DeviceWriteStatus = {
+    ready: 'ready',
+    busy: 'busy',
+    pending: 'pending',
+}
+
+export const ColorMasks = {
+    white: 0x0F,
+    color: 0xF0,
+    both: 0xFF,
+}
+
+export const PowerCommands = {
+    COMMAND_POWER_ON: [0x71, 0x23, 0x0f],
+    COMMAND_POWER_OFF: [0x71, 0x24, 0x0f],
+}
+
+export const DefaultCommand = {
+    isOn: false,
+    RGB: {
+        red: 0,
+        green: 0,
+        blue: 0,
+    },
+    CCT: {
+        warmWhite: 0,
+        coldWhite: 0
+    }
+}
+
+export const DefaultDevice = {
+    ipAddress: '',
+    uniqueId: '',
+    modelNumber: 'unknown',
+}
+
+export const OPTIMIZATION_SETTINGS = {
+    INTRA_MESSAGE_TIME: 10,
+    POWER_WAIT_TIME: 100,
+    STATE_RETRY_WAIT_TIME: 500,
+}
+
 /*----------------------[Device State]----------------------*/
 export interface IProtoDevice {
     ipAddress: string;
@@ -72,11 +115,19 @@ export interface IDeviceCommand {
 }
 
 export interface ICommandOptions {
+    verifyState?: true;
     timeoutMS?: number;
-    deviceApi?: IDeviceAPI;
-    verifyState?: boolean;
-    colorMask?: typeof ColorMasks;
-    manualPowerCommand?: boolean
+    bufferMS?: number;
+    colorMask?: number;
+    retries?: number;
+}
+
+export const CommandDefaults: ICommandOptions = {
+    verifyState: true,
+    timeoutMS: 50,
+    bufferMS: 50,
+    colorMask: ColorMasks.both,
+    retries: 5,
 }
 
 export interface IColorRGB {
@@ -89,47 +140,4 @@ export interface IColorCCT {
     cctValue?: number;
     warmWhite?: number;
     coldWhite?: number;
-}
-
-/*----------------------[Constants]----------------------*/
-export const DeviceWriteStatus = {
-    ready: 'ready',
-    busy: 'busy',
-    pending: 'pending',
-}
-
-export const ColorMasks = {
-    white: 0x0F,
-    color: 0xF0,
-    both: 0xFF,
-}
-
-export const PowerCommands = {
-    COMMAND_POWER_ON: [0x71, 0x23, 0x0f],
-    COMMAND_POWER_OFF: [0x71, 0x24, 0x0f],
-}
-
-export const DefaultCommand = {
-    isOn: false,
-    RGB: {
-        red: 0,
-        green: 0,
-        blue: 0,
-    },
-    CCT: {
-        warmWhite: 0,
-        coldWhite: 0
-    }
-}
-
-export const DefaultDevice = {
-    ipAddress: '',
-    uniqueId: '',
-    modelNumber: 'unknown',
-}
-
-export const OPTIMIZATION_SETTINGS = {
-    INTRA_MESSAGE_TIME: 10,
-    POWER_WAIT_TIME: 100,
-    STATE_RETRY_WAIT_TIME: 500,
 }
