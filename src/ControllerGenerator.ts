@@ -27,8 +27,7 @@ export class ControllerGenerator {
             const discoveredDevices: types.IProtoDevice[] = await this.discoverDevices();
             Promise.all(
                 discoveredDevices.map(async (discoveredDevice) => {
-                    await this.instantiateController(discoveredDevice);
-
+                     return await this.instantiateController(discoveredDevice);
                 })
             ).finally(() => {
                 resolve(this.activeDevices)
@@ -113,7 +112,7 @@ export class ControllerGenerator {
         return new Promise(async (resolve, reject) => {
 
             const deviceController = new BaseController(protoDevice);
-            await deviceController.reInitializeController(deviceAPI);
+            await deviceController.initializeController(deviceAPI);
             resolve(deviceController);
         });
     }
@@ -134,19 +133,24 @@ export class ControllerGenerator {
         }
     }
 
-    /**
-     * class function sendDirectCommand
-     * 
-     * @param directCommand
-     * @param commandOptions (optional)
+    /** TODO
+     * change this to a base controller function
+     * check if the device exists, if not create it. If yes, just send a message using the direct command protocol. 
      */
-    public async sendDirectCommand(directCommand: types.DirectCommand, commandOptions?: types.ICommandOptions) {
+    // /**
+    //  * class function sendDirectCommand
+    //  * 
+    //  * @param directCommand
+    //  * @param commandOptions (optional)
+    //  */
 
-        const customCompleteDevice: types.CustomCompleteDeviceProps = { protoDevice: directCommand, deviceAPI: commandOptions.deviceApi }
-        const controller = this.createCustomControllers([customCompleteDevice])[0];
+    // public async sendDirectCommand(directCommand: types.DirectCommand, commandOptions?: types.ICommandOptions) {
 
-        controller.activeDevice.setAllValues(directCommand, commandOptions.verifyState);
+    //     const customCompleteDevice: types.CustomCompleteDeviceProps = { protoDevice: directCommand }
+    //     const controller = this.createCustomControllers([customCompleteDevice])[0];
 
-    }
+    //     controller.activeDevice.setAllValues(directCommand, commandOptions.verifyState);
+
+    // }
 
 }

@@ -9,23 +9,22 @@ const deviceList = [];
 async function makeControllers() {
     return new Promise<BaseController[]>(async (resolve, reject) => {
 
-
         const controllers: Map<string, BaseController> = await controllerGenerator.discoverControllers();
-
-        let input = '';
-
+      
         let count = 1;
-
         for (const [key, activeDevice] of Object.entries(controllers)) {
-            // if(activeDevice.deviceAPI.description === 'RGBWW Simultaneous'){
-            deviceList[count] = activeDevice;
-            count++;
-            //  }
+            try {
+                // console.log(activeDevice.protoDevice.uniqueId)
+                //if (activeDevice.protoDevice.uniqueId === 'DC4F22E192D0') {
+                    deviceList[count] = activeDevice;
+                    count++;
+               // }
+            } catch (error) {
+                console.log(error, activeDevice)
+            }
 
 
         }
-
-
         await animate()
     })
     // const refreshRate = 1000 / 60;
@@ -54,13 +53,13 @@ function animate() {
 
             switch (state) {
                 case 0:
-                    controller.setRed(1);
+                    controller.setRed(1, {timeoutMS: 10, bufferMS: 0, verifyRetries: 0});
                     break;
                 case 1:
-                    controller.setGreen(100)
+                    controller.setGreen(1, {timeoutMS: 10, bufferMS: 0, verifyRetries: 0});
                     break;
                 case 2:
-                    controller.setBlue(20)
+                    controller.setBlue(1, {timeoutMS: 10, bufferMS: 0, verifyRetries: 0});
                     break;
                 default:
                     break;
@@ -70,7 +69,7 @@ function animate() {
         state++;
 
 
-    }, 5000);
+    }, 50);
 }
 
 function main() {

@@ -10,6 +10,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: null,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -21,6 +22,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: null,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -32,6 +34,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: false,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -43,6 +46,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: true,
       hasBrightness: true,
       isEightByteProtocol: false,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -54,6 +58,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: null,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -65,6 +70,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: false,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -76,6 +82,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: null,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -87,6 +94,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: false,
+      needsPowerCommand: true,
     },
   ],
   [
@@ -98,6 +106,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: null,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -109,6 +118,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: null,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -120,6 +130,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: false,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -131,6 +142,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: null,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -142,6 +154,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: false,
       isEightByteProtocol: null,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -153,6 +166,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: false,
       isEightByteProtocol: null,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -164,6 +178,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: null,
+      needsPowerCommand: null,
     },
   ],
   [
@@ -175,6 +190,7 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasCCT: false,
       hasBrightness: true,
       isEightByteProtocol: null,
+      needsPowerCommand: null,
     },
   ],
 ]);

@@ -36,9 +36,9 @@ export const DefaultDevice = {
 }
 
 export const OPTIMIZATION_SETTINGS = {
-    INTRA_MESSAGE_TIME: 10,
+    INTRA_MESSAGE_TIME: 20,
     POWER_WAIT_TIME: 100,
-    STATE_RETRY_WAIT_TIME: 500,
+    STATE_RETRY_WAIT_TIME: 10,
 }
 
 /*----------------------[Device State]----------------------*/
@@ -101,7 +101,7 @@ export interface CustomCompleteDeviceProps {
     protoDevice?: ICustomProtoDevice
 }
 
-export type DirectCommand = IDeviceCommand & ICustomProtoDevice;
+export type DirectCommand = IDeviceCommand & ICustomProtoDevice & IDeviceAPI;
 
 export type IFailedDeviceProps = IProtoDevice & {
     latestScanTimestamp: number;
@@ -115,19 +115,17 @@ export interface IDeviceCommand {
 }
 
 export interface ICommandOptions {
-    verifyState?: true;
     timeoutMS?: number;
     bufferMS?: number;
     colorMask?: number;
-    retries?: number;
+    verifyRetries?: number;
 }
 
 export const CommandDefaults: ICommandOptions = {
-    verifyState: true,
-    timeoutMS: 50,
-    bufferMS: 50,
+    timeoutMS: 0,
+    bufferMS: 0,
     colorMask: ColorMasks.both,
-    retries: 5,
+    verifyRetries: 0,
 }
 
 export interface IColorRGB {
