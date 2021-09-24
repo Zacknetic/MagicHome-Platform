@@ -53,13 +53,13 @@ function animate() {
 
             switch (state) {
                 case 0:
-                    controller.setRed(1, {timeoutMS: 10, bufferMS: 0, verifyRetries: 0});
+                    controller.setRed(1, {timeoutMS: 300, bufferMS: 0, verifyRetries: 0});
                     break;
                 case 1:
-                    controller.setGreen(1, {timeoutMS: 10, bufferMS: 0, verifyRetries: 0});
+                    controller.setGreen(1, {timeoutMS: 300, bufferMS: 0, verifyRetries: 0});
                     break;
                 case 2:
-                    controller.setBlue(1, {timeoutMS: 10, bufferMS: 0, verifyRetries: 0});
+                    controller.setBlue(1, {timeoutMS: 300, bufferMS: 0, verifyRetries: 0});
                     break;
                 default:
                     break;
@@ -69,7 +69,7 @@ function animate() {
         state++;
 
 
-    }, 50);
+    }, 200);
 }
 
 function main() {

@@ -98,24 +98,6 @@ export class BaseController {
       switch (deviceWriteStatus) {
         case ready:
 
-          /*
-            1. if ready send as normal
-              a. change to pending DONE
-              b. send message 
-                i. test message 
-                  1. if valid, return
-                  2. if invaid throw error
-              c. resolve
-                i. move to next item on buffer
-                ii. reset all send state
-                iii. return state to ready
-              d. reject
-                i. if there is a buffer ready send message with new buffer
-                ii. else if current message has retries left, retry (keep retries in message, good idea)
-            2. if pending, modify command
-            3. if busy, overwrite any new command / merge (IDEA: option for stream of buffers (buffer stream? I didn't make that up did I) )
-          */
-
           this.deviceWriteStatus = pending;
           this.newColorCommand = deviceCommand;
           const commandOptions = { ..._commandOptions, ...CommandDefaults }
@@ -144,7 +126,6 @@ export class BaseController {
 
     });
   }
-
 
   private async writeStateToDevice(deviceCommand: IDeviceCommand, commandOptions: ICommandOptions): Promise<string> {
 
@@ -255,7 +236,7 @@ export class BaseController {
 
         let commandByteArray;
         if (isEightByteProtocol) {
-          commandByteArray = [0x31, red, green, blue, 0x00, colorMask, 0x0F]; //8th byte checksum calculated later in send()
+          commandByteArray = [0x31, red, green, blue, warmWhite, colorMask, 0x0F]; //8th byte checksum calculated later in send()
         } else {
           commandByteArray = [0x31, red, green, blue, warmWhite, coldWhite, colorMask, 0x0F]; //9 byte
         }

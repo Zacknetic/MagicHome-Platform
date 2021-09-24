@@ -37,7 +37,7 @@ export const DefaultDevice = {
 
 export const OPTIMIZATION_SETTINGS = {
     INTRA_MESSAGE_TIME: 20,
-    POWER_WAIT_TIME: 100,
+    POWER_WAIT_TIME: 20,
     STATE_RETRY_WAIT_TIME: 10,
 }
 
