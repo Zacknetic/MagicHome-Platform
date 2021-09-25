@@ -36,9 +36,9 @@ export const DefaultDevice = {
 }
 
 export const OPTIMIZATION_SETTINGS = {
-    INTRA_MESSAGE_TIME: 20,
-    POWER_WAIT_TIME: 20,
-    STATE_RETRY_WAIT_TIME: 10,
+    INTRA_MESSAGE_TIME: 0,
+    POWER_WAIT_TIME: 0,
+    STATE_RETRY_WAIT_TIME: 0,
 }
 
 /*----------------------[Device State]----------------------*/
@@ -124,7 +124,7 @@ export interface ICommandOptions {
 export const CommandDefaults: ICommandOptions = {
     timeoutMS: 0,
     bufferMS: 0,
-    colorMask: ColorMasks.both,
+    colorMask: null,
     verifyRetries: 0,
 }
 
