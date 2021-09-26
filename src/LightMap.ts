@@ -9,8 +9,8 @@ const lightTypesMap: Map<number, IDeviceAPI> = new Map([
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
-      isEightByteProtocol: null,
-      needsPowerCommand: null,
+      isEightByteProtocol: false,
+      needsPowerCommand: false,
     },
   ],
   [

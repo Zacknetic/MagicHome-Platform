@@ -22,8 +22,6 @@ async function makeControllers() {
 			} catch (error) {
 				console.log(error, activeDevice)
 			}
-
-
 		}
 		animate(deviceList)
 	})
@@ -38,19 +36,24 @@ function animate(deviceList: BaseController[]) {
 		if (state > 4) state = 0;
 		switch (state) {
 			case 0:
-				fade(deviceList, { RGB: { red: 255, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 } }, { RGB: { red: 0, green: 255, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 } }, duration, 20)
+				fade(deviceList, { RGB: { red: 255, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 } },
+					{ RGB: { red: 0, green: 255, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 } }, duration, 20)
 				break;
 			case 1:
-				fade(deviceList, { RGB: { red: 0, green: 255, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 } }, { RGB: { red: 0, green: 0, blue: 255 }, CCT: { warmWhite: 0, coldWhite: 0 } }, duration, 20)
+				fade(deviceList, { RGB: { red: 0, green: 255, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 } },
+					{ RGB: { red: 0, green: 0, blue: 255 }, CCT: { warmWhite: 0, coldWhite: 0 } }, duration, 20)
 				break;
 			case 2:
-				fade(deviceList, { RGB: { red: 0, green: 0, blue: 255 }, CCT: { warmWhite: 0, coldWhite: 0 } }, { RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 } }, duration, 20)
+				fade(deviceList, { RGB: { red: 0, green: 0, blue: 255 }, CCT: { warmWhite: 0, coldWhite: 0 } },
+					{ RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 } }, duration, 20)
 				break;
 			case 3:
-				fade(deviceList, { RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 } }, { RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 255, coldWhite: 0 } }, duration, 20)
+				fade(deviceList, { RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 } },
+					{ RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 255, coldWhite: 0 } }, duration, 20)
 				break;
 			case 4:
-				fade(deviceList, { RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 255, coldWhite: 0 } }, { RGB: { red: 255, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 } }, duration, 20)
+				fade(deviceList, { RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 255, coldWhite: 0 } },
+					{ RGB: { red: 255, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 } }, duration, 20)
 				break;
 
 		}
@@ -63,12 +66,12 @@ function animate(deviceList: BaseController[]) {
 
 const commandOptions: ICommandOptions = {
 	verifyRetries: 0,
-	// colorMask: 0xF0
+	bufferMS: 100,
+	timeoutMS: 0
 }
 
 function main() {
 	makeControllers();
-
 }
 
 
@@ -83,7 +86,7 @@ function fade(deviceList: BaseController[], startCommand: IDeviceCommand, endCom
 		}
 
 		let command: IDeviceCommand = recursiveLerp(startCommand, endCommand, u)
-		const finalCommand = { ison: true , ...command }
+		const finalCommand = { ison: true, ...command }
 		// console.log(command);
 		deviceList.forEach(async (controller, index) => {
 			controller.setAllValues(finalCommand, commandOptions);

@@ -38,10 +38,7 @@ export class BaseController {
 
   //=================================================
   // Start Constructor //
-  constructor(
-    protected protoDevice: IProtoDevice,
-  ) {
-  }
+  constructor(protected protoDevice: IProtoDevice) { };
 
   //=================================================
   // End Constructor //
@@ -88,11 +85,11 @@ export class BaseController {
   }
 
   public async setAllValues(deviceCommand: IDeviceCommand, _commandOptions: ICommandOptions = CommandDefaults) {
-    return await this.processCommand({isOn: true, ...deviceCommand}, _commandOptions);
+    return await this.processCommand({ isOn: true, ...deviceCommand }, _commandOptions);
   }
 
   private async processCommand(deviceCommand: IDeviceCommand, _commandOptions: ICommandOptions = CommandDefaults) {
-    return new Promise<IDeviceState>(async (resolve) => {
+    return new Promise<IDeviceState>(async (resolve, reject) => {
       const deviceWriteStatus = this.deviceWriteStatus;
       switch (deviceWriteStatus) {
         case ready:
@@ -131,12 +128,16 @@ export class BaseController {
           break;
 
         case busy:
-          if (deviceCommand.isOn !== false)
-            //this.bufferDeviceCommand = Object.assign({}, this.bufferDeviceCommand, deviceCommand);
-            this.bufferDeviceCommand = deviceCommand
+          // if (deviceCommand.isOn !== false)x
+          //this.bufferDeviceCommand = Object.assign({}, this.bufferDeviceCommand, deviceCommand);
+          // (this.bufferDeviceCommand = deviceCommand)
+          reject()
+
           break;
       }
 
+    }).catch(() => {
+      return this.deviceState;
     });
   }
 
@@ -153,7 +154,6 @@ export class BaseController {
         sanitizedDeviceCommand.RGB = Object.assign({}, DefaultCommand.RGB, deviceCommand.RGB);
         sanitizedDeviceCommand.CCT = Object.assign({}, DefaultCommand.CCT, deviceCommand.CCT);
         //console.log('everything is probably fine', this.deviceAPI.description, this.protoDevice.uniqueId, this.deviceState.controllerHardwareVersion.toString(16), this.deviceAPI.needsPowerCommand, this.deviceState.controllerFirmwareVersion)
-
 
         await this.prepareColorCommand(sanitizedDeviceCommand, commandOptions);
         if (commandOptions.verifyRetries > 0) {
@@ -179,18 +179,17 @@ export class BaseController {
     });
   }//setColor
 
-
   private async testValidState(deviceCommand: IDeviceCommand, commandOptions?: ICommandOptions) {
     return new Promise(async (resolve, reject) =>
       setTimeout(async () => {
         return await this.fetchState(commandOptions.timeoutMS).then((deviceState) => {
           const isValid = this.stateHasSoftEquality(deviceCommand, deviceState.LED);
-          if(!isValid) {
+          if (!isValid) {
             this.overwriteLocalState(deviceState.LED);
           }
           resolve(isValid)
         }).catch(error => {
-          
+
           reject(error);
         });
       }, STATE_RETRY_WAIT_TIME));
@@ -208,8 +207,8 @@ export class BaseController {
         }
       } else if (_.isEqual(_.omit(deviceStateA, ['colorMask']), (_.omit(deviceStateB, ['colorMask'])))) {
         isEqual = true;
-      }  else {
-        
+      } else {
+
       }
 
       return isEqual;
@@ -235,44 +234,43 @@ export class BaseController {
         resolve(deviceResponse);
       } else {
         let timeout = 0;
+        //console.log(this.deviceAPI.needsPowerCommand)
         if (this.deviceAPI.needsPowerCommand && !this.deviceState.LED.isOn) {
           timeout = 200;
           await this.send(COMMAND_POWER_ON);
         }
         setTimeout(async () => {
-          
-    
-        const { RGB: { red, green, blue }, CCT: { warmWhite, coldWhite } } = deviceCommand;
-        const { isEightByteProtocol } = this.deviceAPI;
-        if (!commandOptions.colorMask) {
-          if (this.deviceAPI.simultaneousCCT) deviceCommand.colorMask = both;
-          else {
-            if(Math.max(warmWhite, coldWhite) > Math.max(red, green, blue) ){
-              commandOptions.colorMask = white;
-            } else {
-              commandOptions.colorMask = color;
+
+          const { RGB: { red, green, blue }, CCT: { warmWhite, coldWhite } } = deviceCommand;
+          const { isEightByteProtocol } = this.deviceAPI;
+          if (!commandOptions.colorMask) {
+            if (this.deviceAPI.simultaneousCCT) deviceCommand.colorMask = both;
+            else {
+              if (Math.max(warmWhite, coldWhite) > Math.max(red, green, blue)) {
+                commandOptions.colorMask = white;
+              } else {
+                commandOptions.colorMask = color;
+              }
             }
-            
           }
-        }
 
-        let commandByteArray;
-        if (isEightByteProtocol) {
-          commandByteArray = [0x31, red, green, blue, warmWhite, commandOptions.colorMask, 0x0F]; //8th byte checksum calculated later in send()
-        } else {
-          commandByteArray = [0x31, red, green, blue, warmWhite, coldWhite, commandOptions.colorMask, 0x0F]; //9 byte
-        }
-        // console.log(commandByteArray)
-        const deviceResponse = await this.send(commandByteArray);
-        if (deviceResponse == null && this.deviceAPI.isEightByteProtocol === null) {
-          console.log("CHANGING DEVICE PROTOCOL", this.deviceAPI.description, this.protoDevice.uniqueId, this.deviceState.controllerFirmwareVersion, this.deviceState.controllerHardwareVersion);
-          this.deviceAPI.isEightByteProtocol = true;
-          await this.prepareColorCommand(deviceCommand, commandOptions);
-        }
+          let commandByteArray;
+          if (isEightByteProtocol) {
+            commandByteArray = [0x31, red, green, blue, warmWhite, commandOptions.colorMask, 0x0F]; //8th byte checksum calculated later in send()
+          } else {
+            commandByteArray = [0x31, red, green, blue, warmWhite, coldWhite, commandOptions.colorMask, 0x0F]; //9 byte
+          }
+          // console.log(commandByteArray)
+          const deviceResponse = await this.send(commandByteArray);
+          if (deviceResponse == null && this.deviceAPI.isEightByteProtocol === null) {
+            //console.log("CHANGING DEVICE PROTOCOL", this.deviceAPI.description, this.protoDevice.uniqueId, this.deviceState.controllerFirmwareVersion, this.deviceState.controllerHardwareVersion);
+            this.deviceAPI.isEightByteProtocol = true;
+            await this.prepareColorCommand(deviceCommand, commandOptions);
+          }
 
-        resolve(deviceResponse)
-        //this.logs.debug('Recieved the following response', output);
-      }, timeout);
+          resolve(deviceResponse)
+          //this.logs.debug('Recieved the following response', output);
+        }, timeout);
       }
     });
   }
@@ -333,7 +331,7 @@ export class BaseController {
   public async initializeController(deviceAPI?: IDeviceAPI) {
     return new Promise(async (resolve, reject) => {
       this.transport = new Transport(this.protoDevice.ipAddress);
-      await this.fetchState().catch(reason => {
+      await this.fetchState(1000).catch(reason => {
         reject(reason);
       });
       if (!deviceAPI) {
@@ -341,9 +339,6 @@ export class BaseController {
       } else {
       }
       resolve('nice!')
-
-
-
 
     }).finally(() => {
       this.deviceWriteStatus = ready;
@@ -355,7 +350,6 @@ export class BaseController {
 
   private async assignAPI(): Promise<string> {
     return new Promise(async (resolve, reject) => {
-
 
       const matchingFirmwareVersions = {
         '2': { needsPowerCommand: true },
@@ -373,7 +367,6 @@ export class BaseController {
       if (firmwareVersion == '1' && modelNumber.includes('HF-LPB100-ZJ200')) {
         needsPowerCommand = { needsPowerCommand: true };
       }
-
 
       if (deviceTypesMap.has(this.deviceState.controllerHardwareVersion)) {
         const deviceAPI: IDeviceAPI = await deviceTypesMap.get(this.deviceState.controllerHardwareVersion);

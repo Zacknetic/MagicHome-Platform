@@ -122,10 +122,10 @@ export interface ICommandOptions {
 }
 
 export const CommandDefaults: ICommandOptions = {
-    timeoutMS: 0,
-    bufferMS: 0,
+    timeoutMS: 100,
+    bufferMS: 50,
     colorMask: null,
-    verifyRetries: 0,
+    verifyRetries: 5,
 }
 
 export interface IColorRGB {
