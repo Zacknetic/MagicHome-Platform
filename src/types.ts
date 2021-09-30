@@ -85,17 +85,6 @@ export interface IDeviceState {
     rawData?: Buffer;
 }
 
-// export interface IDeviceQueriedProps {
-//     deviceParameters: IDeviceAPI;
-//     initialDeviceState: IDeviceState;
-// }
-
-// export interface IReadWriteStatus {
-//     deviceWriteStatus: string;
-//     deviceReadInProgress: boolean;
-//     devicePowerCommand: boolean;
-// }
-
 export interface CustomCompleteDeviceProps {
     deviceAPI?: IDeviceAPI,
     protoDevice?: ICustomProtoDevice

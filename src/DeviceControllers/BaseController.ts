@@ -26,7 +26,7 @@ export class BaseController {
   protected devicePowerCommand;
 
   protected newColorCommand: IDeviceCommand = DefaultCommand;
-  protected bufferDeviceCommand: IDeviceCommand = DefaultCommand;
+  protected bufferDeviceCommand: IDeviceCommand = null;
 
   protected deviceState: IDeviceState;
   protected deviceStateTemporary: IDeviceState;
@@ -116,6 +116,7 @@ export class BaseController {
 
           }).finally(() => {
             this.newColorCommand = DefaultCommand;
+            this.bufferDeviceCommand = null;
             this.devicePowerCommand = false;
             this.deviceWriteStatus = ready
             resolve(this.deviceState);
@@ -123,15 +124,15 @@ export class BaseController {
           break;
 
         case pending:
-          if (deviceCommand.isOn !== false)
-            this.newColorCommand = Object.assign({}, this.newColorCommand, deviceCommand);
+
+          this.newColorCommand = Object.assign({}, this.newColorCommand, deviceCommand);
           break;
 
         case busy:
-          // if (deviceCommand.isOn !== false)x
+
           //this.bufferDeviceCommand = Object.assign({}, this.bufferDeviceCommand, deviceCommand);
-          // (this.bufferDeviceCommand = deviceCommand)
-          reject()
+          this.bufferDeviceCommand = deviceCommand
+          // reject()
 
           break;
       }
@@ -156,7 +157,7 @@ export class BaseController {
         //console.log('everything is probably fine', this.deviceAPI.description, this.protoDevice.uniqueId, this.deviceState.controllerHardwareVersion.toString(16), this.deviceAPI.needsPowerCommand, this.deviceState.controllerFirmwareVersion)
 
         await this.prepareColorCommand(sanitizedDeviceCommand, commandOptions);
-        if (commandOptions.verifyRetries > 0) {
+        if (commandOptions.verifyRetries > 0 && this.bufferDeviceCommand == null) {
           const isValidState = await this.testValidState(sanitizedDeviceCommand, commandOptions).catch((reason) => reject(reason));
           if (isValidState) {
             this.overwriteLocalState(sanitizedDeviceCommand);
@@ -164,15 +165,21 @@ export class BaseController {
           } else {
             reject({ msg: { content: 'Unsuccessful write... retrying: ', retriesLeft: commandOptions.verifyRetries }, logCode: 0x02 });
           }
+        } else if (this.bufferDeviceCommand != null) {
+          reject({ msg: { content: 'commadn in buffer: ' }, logCode: 0x04 })
         } else {
           reject({ msg: { content: 'Ran out of retries: ', retriesLeft: commandOptions.verifyRetries }, logCode: 0x03 })
         }
       }, commandOptions.bufferMS);
     }).catch(async (error) => {
-      if (commandOptions.verifyRetries > 0) {
-        console.log('retries left:', commandOptions.verifyRetries)
+      if (commandOptions.verifyRetries > 0 && this.bufferDeviceCommand == null) {
+        //console.log('retries left:', commandOptions.verifyRetries)
         commandOptions.verifyRetries--;
         return await this.writeStateToDevice(this.newColorCommand, commandOptions);
+      } else if (this.bufferDeviceCommand != null) {
+        const bufferDeviceCommand = Object.assign({}, this.bufferDeviceCommand, deviceCommand);
+        this.bufferDeviceCommand = null;
+        return await this.writeStateToDevice(bufferDeviceCommand, commandOptions);
       }
       // console.log('something failed: ', error, this.deviceAPI.description, this.protoDevice.uniqueId, this.deviceState.controllerHardwareVersion.toString(16), this.deviceAPI.needsPowerCommand, this.deviceState.controllerFirmwareVersion)
 
@@ -236,7 +243,7 @@ export class BaseController {
         let timeout = 0;
         //console.log(this.deviceAPI.needsPowerCommand)
         if (this.deviceAPI.needsPowerCommand && !this.deviceState.LED.isOn) {
-          timeout = 200;
+          timeout = 50;
           await this.send(COMMAND_POWER_ON);
         }
         setTimeout(async () => {
@@ -344,7 +351,7 @@ export class BaseController {
       this.deviceWriteStatus = ready;
       resolve('completed device')
     }).catch(error => {
-      console.log(error);
+      //console.log(error);
     });
   }
 
