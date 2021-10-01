@@ -345,7 +345,7 @@ export class BaseController {
         '4': { needsPowerCommand: true },
         '5': { needsPowerCommand: true },
         '8': { needsPowerCommand: true, isEightByteProtocol: true },
-        '9': { needsPowerCommand: true, isEightByteProtocol: true },
+        '9': { needsPowerCommand: false, isEightByteProtocol: true },
       }
 
       const firmwareVersion = this.deviceState.controllerFirmwareVersion.toString(16);
