@@ -111,8 +111,8 @@ export interface ICommandOptions {
 }
 
 export const CommandDefaults: ICommandOptions = {
-    timeoutMS: 100,
-    bufferMS: 50,
+    timeoutMS: 50,
+    bufferMS: 20,
     colorMask: null,
     verifyRetries: 5,
 }
@@ -124,7 +124,6 @@ export interface IColorRGB {
 }
 
 export interface IColorCCT {
-    cctValue?: number;
     warmWhite?: number;
     coldWhite?: number;
 }

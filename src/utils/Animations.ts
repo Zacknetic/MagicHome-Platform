@@ -29,7 +29,7 @@ const commandOptions: ICommandOptions = {
     bufferMS: 100,
     timeoutMS: 0
 }
-class Animations {
+export class Animations {
     constructor(parameters) {}
 
     public animate(deviceList: BaseController[]) {
