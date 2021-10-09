@@ -84,7 +84,7 @@ export class BaseController {
   }
 
   public async setAllValues(deviceCommand: IDeviceCommand, _commandOptions: ICommandOptions = CommandDefaults) {
-    return await this.processCommand( deviceCommand , _commandOptions);
+    return await this.processCommand(deviceCommand, _commandOptions);
   }
 
   private async processCommand(deviceCommand: IDeviceCommand, _commandOptions: ICommandOptions = CommandDefaults) {
@@ -114,7 +114,7 @@ export class BaseController {
         case busy:
 
           //this.bufferDeviceCommand = Object.assign({}, this.bufferDeviceCommand, deviceCommand);
-           reject()
+          reject()
 
           break;
       }
@@ -212,6 +212,7 @@ export class BaseController {
     //console.log(deviceCommand)
 
     return new Promise(async (resolve) => {
+      
       if (this.devicePowerCommand) {
         const deviceResponse = await this.send(deviceCommand.isOn ? COMMAND_POWER_ON : COMMAND_POWER_OFF);
         resolve(deviceResponse);
@@ -223,10 +224,6 @@ export class BaseController {
           await this.send(COMMAND_POWER_ON);
         }
 
-        if(!deviceCommand.isOn){
-          const deviceResponse = await this.send(COMMAND_POWER_OFF);
-          resolve(deviceResponse);
-        }
         setTimeout(async () => {
 
           const { RGB: { red, green, blue }, CCT: { warmWhite, coldWhite } } = deviceCommand;
@@ -255,6 +252,11 @@ export class BaseController {
             this.deviceAPI.isEightByteProtocol = true;
             await this.prepareCommand(deviceCommand, commandOptions);
           }
+          
+        if (!deviceCommand.isOn) {
+          const deviceResponse = await this.send(COMMAND_POWER_OFF);
+          resolve(deviceResponse);
+        }
 
           resolve(deviceResponse)
           //this.logs.debug('Recieved the following response', output);
@@ -340,6 +342,7 @@ export class BaseController {
     return new Promise(async (resolve, reject) => {
 
       const matchingFirmwareVersions = {
+        '1': { needsPowerCommand: false },
         '2': { needsPowerCommand: true },
         '3': { needsPowerCommand: true, isEightByteProtocol: true },
         '4': { needsPowerCommand: true },
