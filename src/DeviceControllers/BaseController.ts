@@ -1,14 +1,9 @@
-import { lightTypesMap as deviceTypesMap } from '../LightMap';
+import { deviceTypesMap } from '../DeviceTypesMap';
 import { clamp, parseDeviceState } from '../utils/miscUtils'
 import { _ } from 'lodash'
 import { Transport } from 'magichome-core';
-//import { getLogs } from '../utils/logger';
-import { IDeviceCommand, IDeviceInformation, IDeviceState, IDeviceAPI, IProtoDevice } from '../types';
+import { IDeviceCommand, IDeviceInformation, IDeviceState, IDeviceAPI, IProtoDevice, ICommandOptions } from '../types';
 import * as types from '../types';
-import { ICommandOptions } from '..';
-import { resolve } from 'path';
-import { rejects } from 'assert';
-
 
 const {
   ColorMasks: { white, color, both },
@@ -32,8 +27,6 @@ export class BaseController {
 
   protected deviceInformation: IDeviceInformation;
   protected deviceAPI: IDeviceAPI;
-
-  // logs = getLogs();
 
   //=================================================
   // Start Constructor //
@@ -212,13 +205,19 @@ export class BaseController {
     //console.log(deviceCommand)
 
     return new Promise(async (resolve) => {
-      
+
       if (this.devicePowerCommand) {
+        if ((commandOptions.verifyRetries && commandOptions.verifyRetries == 1)) {
+
+          if (!deviceCommand.isOn && this.deviceState.LED.isOn) {
+            await this.send(COMMAND_POWER_ON);
+            await this.send(COMMAND_POWER_OFF);
+          }
+        }
         const deviceResponse = await this.send(deviceCommand.isOn ? COMMAND_POWER_ON : COMMAND_POWER_OFF);
         resolve(deviceResponse);
       } else {
         let timeout = 0;
-        //console.log(this.deviceAPI.needsPowerCommand)
         if (this.deviceAPI.needsPowerCommand && !this.deviceState.LED.isOn) {
           timeout = commandOptions.timeoutMS;
           await this.send(COMMAND_POWER_ON);
@@ -245,21 +244,20 @@ export class BaseController {
           } else {
             commandByteArray = [0x31, red, green, blue, warmWhite, coldWhite, commandOptions.colorMask, 0x0F]; //9 byte
           }
-          // console.log(commandByteArray)
-          const deviceResponse = await this.send(commandByteArray);
+          //console.log(commandByteArray)
+          let deviceResponse = await this.send(commandByteArray);
           if (deviceResponse == null && this.deviceAPI.isEightByteProtocol === null) {
             //console.log("CHANGING DEVICE PROTOCOL", this.deviceAPI.description, this.protoDevice.uniqueId, this.deviceState.controllerFirmwareVersion, this.deviceState.controllerHardwareVersion);
             this.deviceAPI.isEightByteProtocol = true;
-            await this.prepareCommand(deviceCommand, commandOptions);
+            await this.prepareCommand(deviceCommand, commandOptions).catch(error => {
+              //console.log(error);
+            });
           }
-          
-        if (!deviceCommand.isOn) {
-          const deviceResponse = await this.send(COMMAND_POWER_OFF);
-          resolve(deviceResponse);
-        }
 
+          if (!deviceCommand.isOn) {
+            deviceResponse = await this.send(COMMAND_POWER_OFF);
+          }
           resolve(deviceResponse)
-          //this.logs.debug('Recieved the following response', output);
         }, timeout);
       }
     });
@@ -292,10 +290,11 @@ export class BaseController {
         const deviceState = await parseDeviceState(data);
         this.deviceState = deviceState;
         resolve(deviceState);
-      } else {
-        reject('[DeviceControllers](GetState) unable to retrieve data.');
-      }
-    });
+      } 
+      // else {
+      //   reject('[DeviceControllers](GetState) unable to retrieve data.');
+      // }
+    })
   }
 
   private async send(command, useChecksum = true, _timeout = 20) {
@@ -326,13 +325,11 @@ export class BaseController {
       });
       if (!deviceAPI) {
         this.assignAPI();
-      } else {
       }
       resolve('nice!')
 
     }).finally(() => {
       this.deviceWriteStatus = ready;
-      resolve('completed device')
     }).catch(error => {
       //console.log(error);
     });

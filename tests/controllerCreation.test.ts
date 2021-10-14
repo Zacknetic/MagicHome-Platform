@@ -50,20 +50,6 @@ test(`making new controllers`, async () => {
 
 });
 
-test(`making new controllers`, async () => {
-    deviceList.forEach(controller => {
-        //console.log(controller)
-        //controller.setRed(200);
-        // for(let i =0; i < 5; i++){
-            controller.setRed(255)
-        //     setTimeout(() => {
-        //         controller.setWarmWhite(0)
-        //     }, 500);
-        // }
-    });
-
-});
-
 
 // async function makeDevices() {
 

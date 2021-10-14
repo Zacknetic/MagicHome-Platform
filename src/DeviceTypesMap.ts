@@ -1,6 +1,6 @@
 import { IDeviceAPI } from './types';
 
-const lightTypesMap: Map<number, IDeviceAPI> = new Map([
+const deviceTypesMap: Map<number, IDeviceAPI> = new Map([
   [
     0x04,
     {
@@ -214,4 +214,4 @@ function isType(a, b) {
   return a.toLowerCase().indexOf(b) > -1;
 }
 
-export { lightTypesMap, getUniqueIdName };
+export { deviceTypesMap, getUniqueIdName };

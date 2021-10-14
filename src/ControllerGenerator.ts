@@ -22,7 +22,10 @@ export class ControllerGenerator {
 	public async discoverControllers(): Promise<Map<string, BaseController>> {
 		return new Promise<Map<string, BaseController> | null>(async (resolve, reject) => {
 
-			const discoveredDevices: types.IProtoDevice[] = await this.discoverDevices();
+			const discoveredDevices: types.IProtoDevice[] = await this.discoverDevices().catch( error => {
+				console.log(error)
+				return [];
+			});
 			Promise.all(
 				discoveredDevices.map(async (discoveredDevice) => {
 					return await this.instantiateController(discoveredDevice);
@@ -94,7 +97,7 @@ export class ControllerGenerator {
 
 			this.activeDevices[protoDevice.uniqueId] = await this.generateNewDevice(protoDevice);
 		} else {
-			console.log('controller exists')
+			// console.log('controller exists')
 			this.activeDevices[protoDevice.uniqueId].ipAddress = protoDevice.ipAddress;
 		}
 
