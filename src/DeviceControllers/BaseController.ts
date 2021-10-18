@@ -31,7 +31,6 @@ export class BaseController {
   //=================================================
   // Start Constructor //
   constructor(protected protoDevice: IProtoDevice) { };
-
   //=================================================
   // End Constructor //
 
@@ -290,7 +289,7 @@ export class BaseController {
         const deviceState = await parseDeviceState(data);
         this.deviceState = deviceState;
         resolve(deviceState);
-      } 
+      }
       // else {
       //   reject('[DeviceControllers](GetState) unable to retrieve data.');
       // }
@@ -317,22 +316,31 @@ export class BaseController {
     });
   }
 
-  public async initializeController(deviceAPI?: IDeviceAPI) {
+  public async initializeController(deviceAPI?: IDeviceAPI, deviceState?: IDeviceState) {
+
     return new Promise(async (resolve, reject) => {
       this.transport = new Transport(this.protoDevice.ipAddress);
-      await this.fetchState(1000).catch(reason => {
-        reject(reason);
-      });
-      if (!deviceAPI) {
-        this.assignAPI();
+      if(deviceState){
+        this.deviceState = deviceState;
       }
-      resolve('nice!')
-
+      if (deviceAPI) {
+        this.deviceAPI = deviceAPI;
+        resolve('nice!')
+      } else {
+        await this.fetchState(1000).catch(reason => {
+          reject(reason);
+        });
+        if (!deviceAPI) {
+          this.assignAPI();
+        }
+        resolve('nice!')
+      }
     }).finally(() => {
       this.deviceWriteStatus = ready;
     }).catch(error => {
-      //console.log(error);
+      console.log(error);
     });
+
   }
 
   private async assignAPI(): Promise<string> {
@@ -371,7 +379,4 @@ export class BaseController {
     return { deviceAPI: this.deviceAPI, protoDevice: this.protoDevice, deviceState: this.deviceState };
   }
 
-  public getCachedState(): IDeviceState {
-    return this.deviceState;
-  }
 }

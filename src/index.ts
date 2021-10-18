@@ -2,7 +2,7 @@ export { ControllerGenerator } from './ControllerGenerator';
 export { BaseController } from './DeviceControllers/BaseController'
 export {
     ICustomProtoDevice,
-    CustomCompleteDeviceProps,
+    ICustomCompleteDeviceProps as CustomCompleteDeviceProps,
     DirectCommand,
     ICommandOptions,
     IDeviceAPI,

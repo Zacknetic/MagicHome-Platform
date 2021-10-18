@@ -11,7 +11,8 @@
     "build": "tsc",
     "test": "jest",
     "watch": "npm run build && npm link && nodemon || exit 1",
-    "watch-test": "npm run test -- --watch || exit 1"
+    "watch-test": "npm run test -- --watch || exit 1",
+    "watch-build": "npm run build --watch || exit 1"
   },
   "repository": {
     "type": "git",

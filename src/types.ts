@@ -85,9 +85,10 @@ export interface IDeviceState {
     rawData?: Buffer;
 }
 
-export interface CustomCompleteDeviceProps {
+export interface ICustomCompleteDeviceProps {
     deviceAPI?: IDeviceAPI,
-    protoDevice?: ICustomProtoDevice
+    protoDevice?: ICustomProtoDevice,
+    deviceState?: IDeviceState
 }
 
 export type DirectCommand = IDeviceCommand & ICustomProtoDevice & IDeviceAPI;

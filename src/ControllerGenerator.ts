@@ -22,7 +22,7 @@ export class ControllerGenerator {
 	public async discoverControllers(): Promise<Map<string, BaseController>> {
 		return new Promise<Map<string, BaseController> | null>(async (resolve, reject) => {
 
-			const discoveredDevices: types.IProtoDevice[] = await this.discoverDevices().catch( error => {
+			const discoveredDevices: types.IProtoDevice[] = await this.discoverDevices().catch(error => {
 				console.log(error)
 				return [];
 			});
@@ -65,31 +65,37 @@ export class ControllerGenerator {
 	 * 
 	 * @returns a map of <uniqueId, BaseController> pairs or a single BaseController
 	 */
-	public async createCustomControllers(customCompleteDevices: types.CustomCompleteDeviceProps[] | types.CustomCompleteDeviceProps): Promise<Map<string, BaseController>> {
+	public async createCustomControllers(customCompleteDevices: types.ICustomCompleteDeviceProps[] | types.ICustomCompleteDeviceProps): Promise<BaseController | Map<string, BaseController>> {
+		
+		return new Promise<BaseController | Map<string, BaseController> | null>(async (resolve) => {
 
-		if (customCompleteDevices instanceof Array) {
-			return new Promise<Map<string, BaseController> | null>(async (resolve) => {
+			if (customCompleteDevices instanceof Array) {
+				const customControllersMap = new Map();
 				Promise.all(
 					customCompleteDevices.map(async (customCompleteDevice) => {
-						await this.createCustomController(customCompleteDevice);
+						const customController = await this.createCustomController(customCompleteDevice);
+						customControllersMap.set(customController.getCachedDeviceInformation().protoDevice.uniqueId, customController)
 					})
 				).finally(() => {
-					resolve(this.activeDevices)
+					resolve(customControllersMap)
 				})
 
-			})
-		} else {
-			this.createCustomController(customCompleteDevices);
-		}
+			} else {
+				const customController = await this.createCustomController(customCompleteDevices);
+				resolve(customController);
+			}
+		})
+
 	}
 
-	private async createCustomController(customCompleteDevice: types.CustomCompleteDeviceProps) {
+	private async createCustomController(customCompleteDevice: types.ICustomCompleteDeviceProps) {
 
-		const { protoDevice, deviceAPI } = customCompleteDevice;
-
+		const { protoDevice, deviceAPI, deviceState } = customCompleteDevice;
 		const _protoDevice = Object.assign({ uniqueId: UUID(), modelNumber: 'unknown' }, protoDevice);
 
-		this.activeDevices[protoDevice.uniqueId] = this.generateNewDevice(_protoDevice, deviceAPI);
+		const customController = await this.generateNewDevice(_protoDevice, deviceAPI, deviceState);
+		this.activeDevices[protoDevice.uniqueId] = customController;
+		return customController;
 	}
 
 	private async instantiateController(protoDevice: types.IProtoDevice) {
@@ -97,17 +103,15 @@ export class ControllerGenerator {
 
 			this.activeDevices[protoDevice.uniqueId] = await this.generateNewDevice(protoDevice);
 		} else {
-			// console.log('controller exists')
 			this.activeDevices[protoDevice.uniqueId].ipAddress = protoDevice.ipAddress;
 		}
 
 	}
 
-	private async generateNewDevice(protoDevice: types.IProtoDevice, deviceAPI: types.IDeviceAPI = null): Promise<BaseController | null> {
-		return new Promise(async (resolve, reject) => {
-
+	private async generateNewDevice(protoDevice: types.IProtoDevice, deviceAPI: types.IDeviceAPI = null, deviceState: types.IDeviceState = null): Promise<BaseController | null> {
+		return new Promise(async (resolve) => {
 			const deviceController = new BaseController(protoDevice);
-			await deviceController.initializeController(deviceAPI);
+			await deviceController.initializeController(deviceAPI, deviceState);
 			resolve(deviceController);
 		});
 	}
@@ -141,10 +145,10 @@ export class ControllerGenerator {
 
 	public async sendDirectCommand(directCommand: types.DirectCommand, commandOptions?: types.ICommandOptions) {
 
-	    const customCompleteDevice: types.CustomCompleteDeviceProps = { protoDevice: directCommand }
-	    const controller = this.createCustomControllers([customCompleteDevice])[0];
+		const customCompleteDevice: types.ICustomCompleteDeviceProps = { protoDevice: directCommand }
+		const controller = this.createCustomControllers([customCompleteDevice])[0];
 
-	    controller.activeDevice.setAllValues(directCommand, commandOptions);
+		controller.activeDevice.setAllValues(directCommand, commandOptions);
 
 	}
 
