@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
 import * as types from '../types';
+import { IDeviceState } from '../types';
 
 
 //=================================================
@@ -23,8 +24,8 @@ export function clamp(value: number, min: number, max: number) {
 }
 
 export function parseDeviceState(data: Buffer) {
-  let state: types.IDeviceState = {
-    LED: {
+  let state: IDeviceState = {
+    LEDState: {
       isOn: data.readUInt8(2) === 0x23,
       RGB: {
         red: data.readUInt8(6),

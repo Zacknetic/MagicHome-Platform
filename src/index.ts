@@ -9,5 +9,8 @@ export {
     IProtoDevice,
     IDeviceState,
     DeviceWriteStatus,
-    IDeviceCommand
+    IDeviceCommand,
+    IAnimationCommand,
+    IAnimationFrame,
+    IAnimationLoop
 } from './types'

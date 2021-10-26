@@ -21,24 +21,26 @@ export class ControllerGenerator {
 	 */
 	public async discoverControllers(): Promise<Map<string, BaseController>> {
 		return new Promise<Map<string, BaseController> | null>(async (resolve, reject) => {
-
+			const controllers: Map<string, BaseController> = new Map();
 			const discoveredDevices: types.IProtoDevice[] = await this.discoverDevices().catch(error => {
 				console.log(error)
 				return [];
 			});
 			Promise.all(
 				discoveredDevices.map(async (discoveredDevice) => {
-					return await this.instantiateController(discoveredDevice);
+
+					const controller = await this.instantiateController(discoveredDevice);
+					controllers.set(discoveredDevice.uniqueId, controller)
+					return controller;
 				})
 			).finally(() => {
-				resolve(this.activeDevices)
+				resolve(controllers)
 			})
 		})
 	}
 
 	private async discoverDevices(): Promise<types.IProtoDevice[] | null> {
 		return new Promise(async (resolve, reject) => {
-
 			let discoveredDevices: types.IProtoDevice[] = await scan(2000);
 			for (let scans = 0; scans < 5; scans++) {
 
@@ -66,16 +68,15 @@ export class ControllerGenerator {
 	 * @returns a map of <uniqueId, BaseController> pairs or a single BaseController
 	 */
 	public async createCustomControllers(customCompleteDevices: types.ICustomCompleteDeviceProps[] | types.ICustomCompleteDeviceProps): Promise<BaseController | Map<string, BaseController>> {
-		
+
 		return new Promise<BaseController | Map<string, BaseController> | null>(async (resolve) => {
 
 			if (customCompleteDevices instanceof Array) {
 				const customControllersMap = new Map();
-				Promise.all(
-					customCompleteDevices.map(async (customCompleteDevice) => {
-						const customController = await this.createCustomController(customCompleteDevice);
-						customControllersMap.set(customController.getCachedDeviceInformation().protoDevice.uniqueId, customController)
-					})
+				Promise.all(customCompleteDevices.map(async (customCompleteDevice) => {
+					const customController = await this.createCustomController(customCompleteDevice);
+					customControllersMap.set(customController.getCachedDeviceInformation().protoDevice.uniqueId, customController)
+				})
 				).finally(() => {
 					resolve(customControllersMap)
 				})
@@ -99,9 +100,12 @@ export class ControllerGenerator {
 	}
 
 	private async instantiateController(protoDevice: types.IProtoDevice) {
+		let newController: BaseController;
 		if (!this.activeDevices[protoDevice.uniqueId]) {
 
-			this.activeDevices[protoDevice.uniqueId] = await this.generateNewDevice(protoDevice);
+			newController = await this.generateNewDevice(protoDevice);
+			this.activeDevices[protoDevice.uniqueId] = newController;
+			return newController;
 		} else {
 			this.activeDevices[protoDevice.uniqueId].ipAddress = protoDevice.ipAddress;
 		}
@@ -149,7 +153,6 @@ export class ControllerGenerator {
 		const controller = this.createCustomControllers([customCompleteDevice])[0];
 
 		controller.activeDevice.setAllValues(directCommand, commandOptions);
-
 	}
 
 }

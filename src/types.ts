@@ -41,6 +41,17 @@ export const OPTIMIZATION_SETTINGS = {
     STATE_RETRY_WAIT_TIME: 0,
 }
 
+export const EventNumber = new Map([
+    [-5, 'incorrect device state, no retries requested'],
+    [-4, 'incorrect device state, insufficient retries'],
+    [-3, 'incorrect device state, sufficient retries'],
+    [-2, 'cannot write, device busy'],
+    [-1, 'unknown failure'],
+    [0, 'task failed successfully'],
+    [1, 'device responded with valid state']
+]);
+
+
 /*----------------------[Device State]----------------------*/
 export interface IProtoDevice {
     ipAddress: string;
@@ -79,7 +90,7 @@ export interface IControllerInformation {
 }
 
 export interface IDeviceState {
-    LED: IDeviceCommand;
+    LEDState: ILEDState;
     controllerHardwareVersion?: number;
     controllerFirmwareVersion?: number;
     rawData?: Buffer;
@@ -89,6 +100,21 @@ export interface ICustomCompleteDeviceProps {
     deviceAPI?: IDeviceAPI,
     protoDevice?: ICustomProtoDevice,
     deviceState?: IDeviceState
+}
+
+export interface IAnimationLoop {
+    'name': string,
+    'pattern': IAnimationFrame[],
+    'accessories': string[],
+    'accessoryOffsetMS': number,
+}
+
+export interface IAnimationFrame {
+    'colorStart'?: IAnimationCommand,
+    'colorTarget': IAnimationCommand,
+    'transitionTimeMS': number | number[],
+    'durationAtTargetMS'?: number | number[];
+    'chancePercent': number;
 }
 
 export type DirectCommand = IDeviceCommand & ICustomProtoDevice & IDeviceAPI;
@@ -104,18 +130,32 @@ export interface IDeviceCommand {
     colorMask?: number;
 }
 
+export interface ILEDState {
+    isOn?: boolean;
+    RGB?: IColorRGB;
+    CCT?: IColorCCT;
+}
+
+export interface IAnimationCommand {
+    RGB?: IColorRGB;
+    CCT?: IColorCCT;
+    colorMask?: number;
+}
+
 export interface ICommandOptions {
     timeoutMS?: number;
     bufferMS?: number;
     colorMask?: number;
-    verifyRetries?: number;
+    remainingRetries?: number;
+    maxRetries?: number;
+    isAnimationFrame?: boolean;
 }
 
 export const CommandDefaults: ICommandOptions = {
     timeoutMS: 50,
     bufferMS: 20,
     colorMask: null,
-    verifyRetries: 5,
+    remainingRetries: 5,
 }
 
 export interface IColorRGB {
@@ -127,4 +167,9 @@ export interface IColorRGB {
 export interface IColorCCT {
     warmWhite?: number;
     coldWhite?: number;
+}
+
+export interface ICommandResponse {
+    eventNumber: number;
+    deviceResponse: IDeviceCommand | string;
 }
