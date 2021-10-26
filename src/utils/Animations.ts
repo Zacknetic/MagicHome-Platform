@@ -1,6 +1,10 @@
 import { BaseController } from '../DeviceControllers/BaseController';
 import { ControllerGenerator } from '../ControllerGenerator';
-import { ColorMasks, DefaultCommand, ICommandOptions, IDeviceCommand } from '../types';
+import { ColorMasks, DefaultCommand, IAnimationFrame, IAnimationLoop, ICommandOptions, IDeviceCommand } from '../types';
+import { type } from 'os';
+const { performance } = require('perf_hooks');
+
+
 
 // const controllerGenerator = new ControllerGenerator();
 
@@ -25,45 +29,45 @@ import { ColorMasks, DefaultCommand, ICommandOptions, IDeviceCommand } from '../
 // 	})
 // }
 const commandOptions: ICommandOptions = {
-    verifyRetries: 0,
+    maxRetries: 0,
     bufferMS: 100,
-    timeoutMS: 0
+    timeoutMS: 0,
+    isAnimationFrame: true
 }
 export class Animations {
-    constructor(parameters) {}
+    protected transitionInterval;
+    constructor() {
 
-    public animate(deviceList: BaseController[]) {
+    }
+
+    public clearAnimations() {
+        clearInterval(this.transitionInterval);
+    }
+
+    public animateTogether(deviceList: BaseController[], animations: IAnimationLoop) {
         let state = 0
 
         let duration = 1000;
-        setInterval(() => {
-            if (state > 4) state = 0;
-            switch (state) {
-                case 0:
-                    this.fade(deviceList, { RGB: { red: 255, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 } },
-                        { RGB: { red: 0, green: 255, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 } }, duration, 20)
-                    break;
-                case 1:
-                    this.fade(deviceList, { RGB: { red: 0, green: 255, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 } },
-                        { RGB: { red: 0, green: 0, blue: 255 }, CCT: { warmWhite: 0, coldWhite: 0 } }, duration, 20)
-                    break;
-                case 2:
-                    this.fade(deviceList, { RGB: { red: 0, green: 0, blue: 255 }, CCT: { warmWhite: 0, coldWhite: 0 } },
-                        { RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 } }, duration, 20)
-                    break;
-                case 3:
-                    this.fade(deviceList, { RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 } },
-                        { RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 255, coldWhite: 0 } }, duration, 20)
-                    break;
-                case 4:
-                    this.fade(deviceList, { RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 255, coldWhite: 0 } },
-                        { RGB: { red: 255, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 } }, duration, 20)
-                    break;
 
-            }
-            state++;
-        }, 2 * duration);
     }
+    public animateIndividual(device: BaseController, animations: IAnimationLoop) {
+
+        for (const animationFrame of animations.pattern) {
+            let { transitionTimeMS, durationAtTargetMS, chancePercent, colorStart, colorTarget } = animationFrame;
+            const rollDice = Math.random() * 100;
+            if (rollDice > chancePercent) continue;
+            transitionTimeMS = (Math.random() * (transitionTimeMS[1] - transitionTimeMS[0]) + transitionTimeMS[0] ?? transitionTimeMS) as number;
+            durationAtTargetMS = (Math.random() * (durationAtTargetMS[1] - durationAtTargetMS[0]) + durationAtTargetMS[0] ?? durationAtTargetMS) as number;
+            console.log('starting')
+            this.fade([device], colorStart, colorTarget, transitionTimeMS, 20).then(() => setTimeout(() => {
+                console.log('this should run second')
+            }, durationAtTargetMS))
+
+
+        }
+
+    }
+
 
 
     private async fade(deviceList: BaseController[], startCommand: IDeviceCommand, endCommand: IDeviceCommand, duration, interval) {
@@ -71,11 +75,11 @@ export class Animations {
         const steps = duration / interval;
         const step_u = 1.0 / steps;
         let u = 0.0;
-        const theInterval = setInterval(function () {
+        this.transitionInterval = setInterval(function () {
             if (u >= 1.0) {
-                clearInterval(theInterval);
+                clearInterval(this.transitionInterval);
             }
-
+            console.log(u)
             let command: IDeviceCommand = recursiveLerp(startCommand, endCommand, u)
             const finalCommand = { ison: true, ...command }
             // console.log(command);
