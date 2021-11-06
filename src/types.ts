@@ -149,6 +149,7 @@ export interface ICommandOptions {
     remainingRetries?: number;
     maxRetries?: number;
     isAnimationFrame?: boolean;
+    isPowerCommand?: boolean;
 }
 
 export const CommandDefaults: ICommandOptions = {

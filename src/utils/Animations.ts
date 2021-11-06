@@ -66,20 +66,15 @@ export class Animations {
         this.cancelLoop = false;
         while (!this.cancelLoop) {
             for (const animationFrame of animations.pattern) {
-                // animations.pattern.forEach(animationFrame => {
-                // console.log('STARTING A PATTERN')
-
 
                 let { transitionTimeMS, durationAtTargetMS, chancePercent, colorStart, colorTarget } = animationFrame;
                 const rollDice = Math.random() * 100;
                 // console.log("DEVILS DICE:", rollDice, " YOUR DICE:", chancePercent)
+                
                 if (rollDice > chancePercent) continue;
                 transitionTimeMS = arrayToRandomInt(transitionTimeMS);
                 durationAtTargetMS = arrayToRandomInt(durationAtTargetMS);
 
-
-                // console.log(transitionTimeMS)
-                // console.log('starting')
                 await this.fade([device], colorStart, colorTarget, transitionTimeMS, 20)
                 // countClock(Math.round(durationAtTargetMS as number / 100) - 10)
                 await new Promise(async (resolve) => {
@@ -88,14 +83,8 @@ export class Animations {
                     }, durationAtTargetMS as number);
                     this.transitionTimeouts.push(timeout)
                 })
-
-
-
-
-                // });
             }
         }
-
     }
 
 
@@ -126,8 +115,6 @@ export class Animations {
         })
 
     };
-
-
 }
 
 function recursiveLerp(objOne, objTwo, u, objTarget = {}) {
