@@ -1,25 +1,19 @@
+import { DeviceInterface, ICommandOptions, IDeviceCommand, IDeviceState, IIncompleteCommand, ITransportResponse } from 'magichome-core';
+
 import { deviceTypesMap } from '../DeviceTypesMap';
-import { clamp, parseDeviceState } from '../utils/miscUtils'
+import { clamp } from '../utils/miscUtils'
 import { Animations } from '../utils/Animations';
 import { _ } from 'lodash'
-import { Transport } from 'magichome-core';
-import { IDeviceCommand, IDeviceInformation, IDeviceState, IDeviceAPI, IProtoDevice, ICommandOptions, ICommandResponse, ILEDState } from '../types';
-import * as types from '../types';
+import { IDeviceInformation, IDeviceAPI, IProtoDevice } from '../types';
+import { ColorMasks, DefaultCommand, CommandDefaults, COMMAND_TYPE } from 'magichome-core';
 import { IAnimationLoop } from '..';
 
 
-
-const {
-  ColorMasks: { white, color, both },
-  DeviceWriteStatus: { ready, busy, pending },
-  PowerCommands: { COMMAND_POWER_OFF, COMMAND_POWER_ON },
-  DefaultCommand,
-  OPTIMIZATION_SETTINGS: { INTRA_MESSAGE_TIME, POWER_WAIT_TIME, STATE_RETRY_WAIT_TIME },
-  CommandDefaults
-} = types;
+const { white, color, both } = ColorMasks;
+const {POWER_COMMAND, COLOR_COMMAND, ANIMATION_FRAME, QUERY_COMMAND} = COMMAND_TYPE;
 
 export class BaseController {
-  protected transport;
+  protected deviceInterface: DeviceInterface;
 
   protected deviceWriteStatus;
   protected devicePowerCommand;
@@ -27,7 +21,6 @@ export class BaseController {
   protected newDeviceCommand: IDeviceCommand = DefaultCommand;
 
   protected deviceState: IDeviceState;
-  protected LEDStateTemporary: ILEDState;
 
   protected deviceInformation: IDeviceInformation;
   protected deviceAPI: IDeviceAPI;
@@ -44,43 +37,7 @@ export class BaseController {
   // End Constructor //
 
   public async setOn(value: boolean, _commandOptions?: ICommandOptions) {
-    const baseCommand: IDeviceCommand = { isOn: value }
-    let deviceCommand: IDeviceCommand;
-
-    if (this.deviceWriteStatus === ready) {
-      this.devicePowerCommand = true;
-      deviceCommand = { ...this.deviceState.LEDState, ...baseCommand };
-      return await this.processCommand(deviceCommand, _commandOptions);
-    }
-  }
-
-  public async setRed(value: number, _commandOptions?: ICommandOptions) {
-    value = Math.round(clamp(value, 0, 255));
-    const deviceCommand: IDeviceCommand = { isOn: true, RGB: { red: value }, colorMask: color }
-    return await this.processCommand(deviceCommand, _commandOptions);
-  }
-
-  public async setGreen(value: number, _commandOptions?: ICommandOptions) {
-    value = Math.round(clamp(value, 0, 255));
-    const deviceCommand: IDeviceCommand = { isOn: true, RGB: { green: value }, colorMask: color }
-    return await this.processCommand(deviceCommand, _commandOptions);
-  }
-
-  public async setBlue(value: number, _commandOptions?: ICommandOptions) {
-    value = Math.round(clamp(value, 0, 255));
-    const deviceCommand: IDeviceCommand = { isOn: true, RGB: { blue: value }, colorMask: color }
-    return await this.processCommand(deviceCommand, _commandOptions);
-  }
-
-  public async setWarmWhite(value: number, _commandOptions?: ICommandOptions) {
-    value = Math.round(clamp(value, 0, 255));
-    const deviceCommand: IDeviceCommand = { isOn: true, CCT: { warmWhite: value }, colorMask: white }
-    return await this.processCommand(deviceCommand, _commandOptions);
-  }
-
-  public async setColdWhite(value: number, _commandOptions?: ICommandOptions) {
-    value = Math.round(clamp(value, 0, 255));
-    const deviceCommand: IDeviceCommand = { isOn: true, CCT: { coldWhite: value }, colorMask: white }
+    const deviceCommand: IIncompleteCommand = { isOn: value }
     return await this.processCommand(deviceCommand, _commandOptions);
   }
 
@@ -89,44 +46,7 @@ export class BaseController {
   }
 
   private async processCommand(deviceCommand: IDeviceCommand, commandOptions: ICommandOptions = CommandDefaults): Promise<ICommandResponse> {
-    const deviceWriteStatus = this.deviceWriteStatus;
 
-    switch (deviceWriteStatus) {
-      case ready:
-
-        this.deviceWriteStatus = pending;
-        commandOptions = _.merge({}, CommandDefaults, commandOptions)
-        commandOptions.remainingRetries = commandOptions.maxRetries;
-        _.merge(this.newDeviceCommand, DefaultCommand, deviceCommand)
-
-        new Promise((resolve) => {
-          setTimeout(() => {
-            this.deviceWriteStatus = busy;
-            let _commandResponse;
-            this.prepareCommand(this.newDeviceCommand, commandOptions).then((commandResponse: ICommandResponse) => {
-              _commandResponse = commandResponse;
-            }).catch(eventNumber => {
-              const commandResponse: ICommandResponse = { eventNumber, deviceResponse: null };
-              _commandResponse = commandResponse;
-            }).finally(() => {
-              this.newDeviceCommand = DefaultCommand;
-              this.devicePowerCommand = false;
-              this.deviceWriteStatus = ready
-              resolve(_commandResponse)
-            })
-
-
-          }, commandOptions.bufferMS);
-        });
-      case pending:
-        _.merge(this.newDeviceCommand, DefaultCommand, deviceCommand)
-        break;
-
-      case busy:
-
-        const commandResponse: ICommandResponse = { eventNumber: -2, deviceResponse: null };
-        return commandResponse;
-    }
 
   }
 
@@ -136,148 +56,67 @@ export class BaseController {
     //console.log('everything is probably fine', this.deviceAPI.description, this.protoDevice.uniqueId, this.deviceState.controllerHardwareVersion.toString(16), this.deviceAPI.needsPowerCommand, this.deviceState.controllerFirmwareVersion)
 
     const deviceResponse = await this.writeCommand(deviceCommand, commandOptions);
-    return await this.handleDeviceResponse(deviceResponse, deviceCommand, commandOptions).catch(async (commandResponse: ICommandResponse) => {
 
-      if (commandResponse.eventNumber == -3) {
-        commandOptions.remainingRetries--;
-        return await this.prepareCommand(deviceCommand, commandOptions);
-      } else {
-        return commandResponse;
-      }
-      // console.log('something failed: ', error, this.deviceAPI.description, this.protoDevice.uniqueId, this.deviceState.controllerHardwareVersion.toString(16), this.deviceAPI.needsPowerCommand, this.deviceState.controllerFirmwareVersion)
-
-    });
   }
 
-  private async handleDeviceResponse(deviceResponse, deviceCommand, commandOptions) {
-    return new Promise<ICommandResponse>(async (resolve, reject) => {
-
-      if (commandOptions.remainingRetries > 0) {
-        console.log(commandOptions.remainingRetries)
-        const isValidState = await this.testValidState(deviceCommand, commandOptions);
-        console.log(isValidState)
-        if (isValidState) {
-          this.overwriteLocalState(deviceCommand);
-          const commandResponse: ICommandResponse = { eventNumber: 1, deviceResponse: deviceCommand };
-          resolve(commandResponse)
-        } else {
-          console.log("INVALID STATE")
-          const commandResponse: ICommandResponse = { eventNumber: -3, deviceResponse };
-          reject(commandResponse);
-        }
-      } else if (commandOptions.maxRetries > 0) {
-        const commandResponse: ICommandResponse = { eventNumber: -4, deviceResponse };
-        reject(commandResponse);
-      } else {
-        const commandResponse: ICommandResponse = { eventNumber: -5, deviceResponse };
-        reject(commandResponse);
-      }
-    })
+  private overwriteLocalState(deviceCommand: IDeviceCommand) {
+    if (this.devicePowerCommand) {
+      _.merge(this.deviceState, deviceCommand.isOn);
+    } else {
+      _.merge(this.deviceState, deviceCommand);
+    }
   }
 
-  private async testValidState(deviceCommand: IDeviceCommand, commandOptions?: ICommandOptions) {
-    return new Promise<boolean>(async (resolve, reject) => {
+  private async writeCommand(deviceCommand: IIncompleteCommand, commandOptions: ICommandOptions): Promise<ITransportResponse> {
+    let transportResponse: ITransportResponse;
+    if (commandOptions.commandType == POWER_COMMAND) {
+
+      // if (!deviceCommand.isOn && this.deviceState.LEDState.isOn) {
+      //   this.deviceInterface.sendCommand(deviceCommand, commandOptions);
+      //   this.deviceInterface.sendCommand(COMMAND_POWER_OFF);
+      // }
+
+      transportResponse =  await this.deviceInterface.sendCommand(deviceCommand, commandOptions);
+      return transportResponse;
+    } else {
+      let powerUpWaitTime = 0;
+      if (this.deviceAPI.needsPowerCommand && !this.deviceState.LEDState.isOn) {
+        powerUpWaitTime = 500;
+        this.send(COMMAND_POWER_ON);
+      }
 
       setTimeout(async () => {
-        const deviceState = await this.fetchState(commandOptions.timeoutMS);
-        const isValidState = this.stateHasSoftEquality(deviceCommand, deviceState.LEDState);
-        if (!isValidState) {
-          this.overwriteLocalState(deviceState.LEDState);
-        }
-        resolve(isValidState);
-      }, STATE_RETRY_WAIT_TIME);
-    })
-  }
 
-  private stateHasSoftEquality(LEDStateA: ILEDState, LEDStateB: ILEDState): boolean {
-    try {
-      let isEqual = false;
-      // console.log("LED STATE A", LEDStateA)
-      // console.log("LED STATE b", LEDStateB)
-
-      if (this.devicePowerCommand) {
-        if (LEDStateA.isOn === LEDStateB.isOn) {
-          isEqual = true;
-        }
-      } else if (_.isEqual(_.omit(LEDStateA, ['colorMask']), (_.omit(LEDStateB, ['colorMask'])))) {
-        isEqual = true;
-      }
-      // console.log('IS EQUAL:', isEqual)
-      return isEqual;
-    } catch (error) {
-
-      return error
-    }
-  }
-
-  private overwriteLocalState(deviceCommand: IDeviceCommand, LEDState?: ILEDState) {
-    if (this.devicePowerCommand) {
-      _.merge(this.deviceState.LEDState, LEDState);
-    } else {
-      _.merge(this.deviceState.LEDState, deviceCommand);
-    }
-  }
-
-  private async writeCommand(deviceCommand: IDeviceCommand, commandOptions: ICommandOptions): Promise<string> {
-    //console.log(deviceCommand)
-
-    return new Promise(async (resolve) => {
-
-      if (this.devicePowerCommand) {
-        if (commandOptions.remainingRetries == 1) {
-
-          if (!deviceCommand.isOn && this.deviceState.LEDState.isOn) {
-            await this.send(COMMAND_POWER_ON);
-            await this.send(COMMAND_POWER_OFF);
-          }
-        }
-        const deviceResponse = await this.send(deviceCommand.isOn ? COMMAND_POWER_ON : COMMAND_POWER_OFF);
-        resolve(deviceResponse);
-      } else {
-        let timeout = 0;
-        if (this.deviceAPI.needsPowerCommand && !this.deviceState.LEDState.isOn) {
-          timeout = commandOptions.timeoutMS;
-          await this.send(COMMAND_POWER_ON);
-        }
-
-        setTimeout(async () => {
-
-          const { RGB: { red, green, blue }, CCT: { warmWhite, coldWhite } } = deviceCommand;
-          const { isEightByteProtocol } = this.deviceAPI;
-          if (!commandOptions.colorMask) {
-            if (this.deviceAPI.simultaneousCCT) deviceCommand.colorMask = both;
-            else {
-              if (Math.max(warmWhite, coldWhite) > Math.max(red, green, blue)) {
-                commandOptions.colorMask = white;
-              } else {
-                commandOptions.colorMask = color;
-              }
+        const { RGB: { red, green, blue }, CCT: { warmWhite, coldWhite } } = deviceCommand;
+        const { isEightByteProtocol } = this.deviceAPI;
+        if (!deviceCommand.colorMask) {
+          if (this.deviceAPI.simultaneousCCT) deviceCommand.colorMask = both;
+          else {
+            if (Math.max(warmWhite, coldWhite) > Math.max(red, green, blue)) {
+              deviceCommand.colorMask = white;
+            } else {
+              deviceCommand.colorMask = color;
             }
           }
+        }
 
-          let commandByteArray;
-          if (isEightByteProtocol) {
-            commandByteArray = [0x31, red, green, blue, warmWhite, commandOptions.colorMask, 0x0F]; //8th byte checksum calculated later in send()
-          } else {
-            commandByteArray = [0x31, red, green, blue, warmWhite, coldWhite, commandOptions.colorMask, 0x0F]; //9 byte
-          }
-          //console.log(commandByteArray)
-          let deviceResponse = await this.send(commandByteArray);
-          if (deviceResponse == null && this.deviceAPI.isEightByteProtocol === null) {
-            //console.log("CHANGING DEVICE PROTOCOL", this.deviceAPI.description, this.protoDevice.uniqueId, this.deviceState.controllerFirmwareVersion, this.deviceState.controllerHardwareVersion);
-            this.deviceAPI.isEightByteProtocol = true;
-            await this.writeCommand(deviceCommand, commandOptions).catch(error => {
-              //console.log(error);
-            });
-          }
 
-          if (!deviceCommand.isOn) {
-            deviceResponse = await this.send(COMMAND_POWER_OFF);
-          }
-          resolve(deviceResponse)
-        }, timeout);
-      }
-    });
+        transportResponse = this.deviceInterface.sendCommand(deviceCommand, commandOptions);
+        if (transportResponse == null && this.deviceAPI.isEightByteProtocol === null) {
+          //console.log("CHANGING DEVICE PROTOCOL", this.deviceAPI.description, this.protoDevice.uniqueId, this.deviceState.controllerFirmwareVersion, this.deviceState.controllerHardwareVersion);
+          this.deviceAPI.isEightByteProtocol = true;
+          transportResponse = await this.writeCommand(deviceCommand, commandOptions).catch(error => {
+            //console.log(error);
+          });
+        }
+
+        if (!deviceCommand.isOn) {
+          transportResponse = await this.send(COMMAND_POWER_OFF);
+        }
+        return transportResponse
+      }, powerUpWaitTime);
+    }
+
   }
 
   public async fetchState(_timeout: number = 200): Promise<IDeviceState> {
@@ -290,7 +129,7 @@ export class BaseController {
       let scans = 0, data: Buffer;
 
       while (data == null && scans < 5) {
-        data = await this.transport.getState(_timeout);
+        data = await this.deviceInterface.getState(_timeout);
         scans++;
       }
       if (data) {
@@ -304,11 +143,7 @@ export class BaseController {
     })
   }
 
-  private async send(command, useChecksum = true, _timeout = 20) {
-    const buffer = Buffer.from(command);
-    const deviceResponse = await this.transport.send(buffer, useChecksum, _timeout);
-    return deviceResponse;
-  }
+
 
   public cacheCurrentLightState() {
     this.LEDStateTemporary = this.deviceState.LEDState;
@@ -323,7 +158,7 @@ export class BaseController {
   public async initializeController(deviceAPI?: IDeviceAPI, deviceState?: IDeviceState) {
 
     return new Promise(async (resolve, reject) => {
-      this.transport = new Transport(this.protoDevice.ipAddress);
+      this.deviceInterface = new Transport(this.protoDevice.ipAddress);
       if (deviceState) {
         this.deviceState = deviceState;
       }
@@ -339,8 +174,6 @@ export class BaseController {
         }
         resolve('nice!')
       }
-    }).finally(() => {
-      this.deviceWriteStatus = ready;
     }).catch(error => {
       console.log(error);
     });
