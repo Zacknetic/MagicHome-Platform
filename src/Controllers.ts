@@ -8,7 +8,7 @@ import { discoverProtoDevices } from './utils/platformUtils';
  * 
  */
 export class Controllers {
-	public activeDevices: Map<string, BaseController> = new Map();
+	public activeDevices: BaseController[] = [];
 	public inactiveDeviceQueue: IFailedDeviceProps[] = [];
 	constructor() { }
 
@@ -28,11 +28,11 @@ export class Controllers {
 		return completedDevices;
 	}
 
-	public generateControllers(completedDevices: ICompleteDevice[]): Map<string, BaseController> {
+	public generateControllers(completedDevices: ICompleteDevice[]): BaseController[] {
 
 		for (const completedDevice of completedDevices) {
 			const deviceController: BaseController = new BaseController(completedDevice);
-			this.activeDevices.set(completedDevice.protoDevice.uniqueId, deviceController)
+			this.activeDevices.push(deviceController)
 		}
 
 		return this.activeDevices;
@@ -96,21 +96,21 @@ export class Controllers {
 
 
 
-	/**
-	 * class function getActiveDevices
-	 * 
-	 * Returns a map of <uniqueId, BaseController> pairs or;
-	 * If provided a valid uniqueId, returns a single BaseController
-	 * @param uniqueId (optional)
-	 * @returns 
-	 */
-	public getActiveDevice(uniqueId?: string): Map<string, BaseController> | BaseController {
-		if (uniqueId) {
-			return this.activeDevices[uniqueId];
-		} else {
-			return this.activeDevices;
-		}
-	}
+	// /**
+	//  * class function getActiveDevices
+	//  * 
+	//  * Returns a map of <uniqueId, BaseController> pairs or;
+	//  * If provided a valid uniqueId, returns a single BaseController
+	//  * @param uniqueId (optional)
+	//  * @returns 
+	//  */
+	// public getActiveDevice(uniqueId?: string): Map<string, BaseController> | BaseController {
+	// 	if (uniqueId) {
+	// 		return this.activeDevices[uniqueId];
+	// 	} else {
+	// 		return this.activeDevices;
+	// 	}
+	// }
 
 	/** TODO
 	 * change this to a base controller function

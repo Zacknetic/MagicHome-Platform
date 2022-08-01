@@ -7,15 +7,20 @@ const deviceList = [];
 // import { ICommandOptions, ICommandResponse, IDeviceCommand } from '../types';
 
 import { assert } from 'console';
+import { BaseController } from '../DeviceControllers/BaseController';
+import { ICommandOptions, IDeviceCommand } from 'magichome-core';
+import { IAnimationLoop } from '../types';
+import { Animations } from '../utils/Animations';
 
 // import * as types from '../types'
 
 let completedDevices;
 const controllers = new Controllers;
-
+let basecontrollers;
+const animation = new Animations;
 describe('Test the scan function for DeviceDiscovery.ts', function () {
 
- 
+
     afterEach(done => {
         setTimeout(done, 100);
     });
@@ -27,25 +32,39 @@ describe('Test the scan function for DeviceDiscovery.ts', function () {
         const ret = await controllers.discoverCompleteDevices();
         // if (ret.length != protoDevices.length) throw new Error("Every proto-device did not retrieve meta-data successfully");
         completedDevices = ret;
-        console.log(ret)
+        // console.log(ret)
     })
 
 
     it('Should create a controller for each device', async function () {
         const ret = await controllers.generateControllers(completedDevices);
         // if (ret.length != protoDevices.length) throw new Error("Every proto-device did not retrieve meta-data successfully");
-    
-        console.log(ret)
-    })
+        basecontrollers = ret;
 
-    // it('Should output an individual device', async function () {
-    //     if (protoDevices.length > 0) {
-    //         const ret = await completeDevices([protoDevices[0]])
-    //         console.log(ret)
+    })
+    // it('turn on a light', async function () {
+    //     if (basecontrollers.has("DC4F22CF7C31")) {
+    //         const a: BaseController = basecontrollers.get("DC4F22CF7C31");
+    //         const command: IDeviceCommand = { isOn: true, RGB: { red: 255, green: 0, blue: 150 }, CCT: { warmWhite: 255, coldWhite: 0 }, colorMask: 0xF0 }
+    //         await a.setAllValues(command)
+
     //     }
     // })
+    it('make colors', async function () {
+        const onlineDevices = basecontrollers.filter((controller: BaseController) => {
+            return controller.getCachedDeviceInformation().deviceState.isOn;
+        })
 
+        // console.log(onlineDevices)
+        // if (basecontrollers.has("DC4F22CF7C31")) {
+        //     const a: BaseController = basecontrollers.get("DC4F22CF7C31");
+            animation.animateIndividual(onlineDevices, colorWave)
+        //     // setTimeout(() => {
+        //     //     animation.clearAnimations();
+        //     // }, 10000);
+        // }
 
+    })
 
 
 
@@ -195,37 +214,37 @@ const controllerTestCases =
 
 /*
 export { ControllerGenerator } from './ControllerGenerator';
-
+ 
 const controllerGenerator = new ControllerGenerator();
 const deviceList = [];
-
+ 
 async function makeControllers() {
     return new Promise<BaseController[]>(async (resolve, reject) => {
-
-
+ 
+ 
         const controllers: Map<string, BaseController> = await controllerGenerator.discoverControllers();
-
+ 
         let input = '';
-
+ 
         let count = 1;
-
+ 
         for (const [key, activeDevice] of Object.entries(controllers)) {
             // if(activeDevice.deviceAPI.description === 'RGBWW Simultaneous'){
             deviceList[count] = activeDevice;
             count++;
             //  }
-
-
+ 
+ 
         }
-
-
+ 
+ 
         await animate()
     })
     // const refreshRate = 1000 / 60;
     // const maxXPosition = 255;
     // let speedX = 1;
     // let positionX = 0;
-
+ 
     // setInterval(() => {
     //   positionX = positionX + speedX;
     //   if (positionX > maxXPosition || positionX < 0) {
@@ -233,18 +252,18 @@ async function makeControllers() {
     //   }
     //   controller.setRed(positionX, false);
     // }, refreshRate);
-
-
+ 
+ 
 }
-
+ 
 let state = 0
-
+ 
 function animate() {
     setInterval(() => {
         if (state > 2) state = 0;
         console.log(state)
         deviceList.forEach(async (controller) => {
-
+ 
             switch (state) {
                 case 0:
                     controller.setRed(1);
@@ -258,17 +277,135 @@ function animate() {
                 default:
                     break;
             }
-
+ 
         })
         state++;
-
-
+ 
+ 
     }, 5000);
 }
-
+ 
 function main() {
     makeControllers();
-
+ 
 }
-
+ 
 main();*/
+
+const thunderstruck: IAnimationLoop = {
+
+    'name': 'ThunderStruck',
+    'pattern': [
+        {
+            'colorStart': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+            },
+            'transitionTimeMS': [2000, 3000],
+            'durationAtTargetMS': 100,
+            'chancePercent': 10,
+        },
+        {
+            'colorStart': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+            },
+            'transitionTimeMS': [2000, 3000],
+            'durationAtTargetMS': 100,
+            'chancePercent': 100,
+        },
+    ],
+    'accessories': [
+        'Office Light',
+    ],
+    'accessoryOffsetMS': 0,
+};
+
+const colorWave: IAnimationLoop = {
+
+    'name': 'colorWave',
+    'pattern': [
+        {
+            'colorStart': {
+                RGB: { red: 255, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 127, green: 127, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+            },
+            'transitionTimeMS': 10000,
+            'durationAtTargetMS': 1000,
+            'chancePercent': 100,
+        },
+        {
+            'colorStart': {
+                RGB: { red: 127, green: 127, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 0, green: 255, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+            },
+            'transitionTimeMS': 10000,
+            'durationAtTargetMS': 1000,
+            'chancePercent': 100,
+        },
+        {
+            'colorStart': {
+                RGB: { red: 0, green: 255, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 0, green: 127, blue: 127 }, CCT: { warmWhite: 0, coldWhite: 0 },
+            },
+            'transitionTimeMS': 10000,
+            'durationAtTargetMS': 1000,
+            'chancePercent': 100,
+        },
+        {
+            'colorStart': {
+                RGB: { red: 0, green: 127, blue: 127 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 0, green: 0, blue: 255 }, CCT: { warmWhite: 0, coldWhite: 0 },
+            },
+            'transitionTimeMS': 10000,
+            'durationAtTargetMS': 1000,
+            'chancePercent': 100,
+        },
+        {
+            'colorStart': {
+                RGB: { red: 0, green: 0, blue: 255 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 127, green: 0, blue: 127 }, CCT: { warmWhite: 0, coldWhite: 0 },
+            },
+            'transitionTimeMS': 10000,
+            'durationAtTargetMS': 1000,
+            'chancePercent': 100,
+        },
+        {
+            'colorStart': {
+                RGB: { red: 127, green: 0, blue: 127 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 255, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+            },
+            'transitionTimeMS': 10000,
+            'durationAtTargetMS': 1000,
+            'chancePercent': 100,
+        },
+    ],
+    'accessories': [
+        'Office Light',
+    ],
+    'accessoryOffsetMS': 0,
+};

@@ -1,4 +1,4 @@
-import {EventNumber, IProtoDevice, ICompleteDevice, COMMAND_TYPE, CommandDefaults, ICommandOptions, IDeviceCommand, IColorRGB, IColorCCT, IDeviceResponse, IDeviceState, IDeviceMetaData, ITransportResponse} from 'magichome-core';
+import {EventNumber, IProtoDevice, ICompleteDevice, COMMAND_TYPE, ICommandOptions, IDeviceCommand, IColorRGB, IColorCCT, IDeviceResponse, IDeviceState, IDeviceMetaData, ITransportResponse} from 'magichome-core';
 /*----------------------[Constants]----------------------*/
 
 

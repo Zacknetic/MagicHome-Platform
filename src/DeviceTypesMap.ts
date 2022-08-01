@@ -218,6 +218,7 @@ export const matchingFirmwareVersions: Map<number, any> = new Map([
   [3, { needsPowerCommand: true, isEightByteProtocol: true }],
   [4, { needsPowerCommand: true }],
   [5, { needsPowerCommand: true }],
+  [7, { needsPowerCommand: false, isEightByteProtocol: false }],
   [8, { needsPowerCommand: true, isEightByteProtocol: true }],
   [9, { needsPowerCommand: false, isEightByteProtocol: true }],
 ])

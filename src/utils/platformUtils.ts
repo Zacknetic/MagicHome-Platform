@@ -24,16 +24,15 @@ export async function discoverProtoDevices(): Promise<IProtoDevice[] | null> {
 export function getAPI(deviceMetaData: IDeviceMetaData) {
     const { controllerFirmwareVersion, controllerHardwareVersion } = deviceMetaData;
 
-
-    const adjustedProtocols = matchingFirmwareVersions[controllerFirmwareVersion];
+    let adjustedProtocols;
+    if (matchingFirmwareVersions.has(controllerFirmwareVersion)) adjustedProtocols = matchingFirmwareVersions.get(controllerFirmwareVersion);
     // if (firmwareVersion == '1' && modelNumber.includes('HF-LPB100-ZJ200')) {
     //     needsPowerCommand = { needsPowerCommand: true };
     // }
 
     if (deviceTypesMap.has(controllerHardwareVersion)) {
         let deviceAPI: IDeviceAPI = deviceTypesMap.get(controllerHardwareVersion);
-        deviceAPI = { ...deviceAPI, ...adjustedProtocols };
-
+        deviceAPI = Object.assign(deviceAPI, adjustedProtocols);
         return deviceAPI;
     } else {
         throw new Error("no matching API! WEIRD!");
