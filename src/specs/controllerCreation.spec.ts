@@ -1,9 +1,55 @@
-import { ControllerGenerator } from '../src/ControllerGenerator';
-import * as types from '../src/types'
-const controllerGenerator = new ControllerGenerator();
+import { Controllers } from '../Controllers';
+import * as types from '../types'
+const cotrollers = new Controllers();
 const deviceList = [];
 
+// import { DeviceInterface } from '../DeviceInterface'
+// import { ICommandOptions, ICommandResponse, IDeviceCommand } from '../types';
 
+import { assert } from 'console';
+
+// import * as types from '../types'
+
+let completedDevices;
+const controllers = new Controllers;
+
+describe('Test the scan function for DeviceDiscovery.ts', function () {
+
+ 
+    afterEach(done => {
+        setTimeout(done, 100);
+    });
+
+
+
+
+    it('Should retrieve meta-data on each device', async function () {
+        const ret = await controllers.discoverCompleteDevices();
+        // if (ret.length != protoDevices.length) throw new Error("Every proto-device did not retrieve meta-data successfully");
+        completedDevices = ret;
+        console.log(ret)
+    })
+
+
+    it('Should create a controller for each device', async function () {
+        const ret = await controllers.generateControllers(completedDevices);
+        // if (ret.length != protoDevices.length) throw new Error("Every proto-device did not retrieve meta-data successfully");
+    
+        console.log(ret)
+    })
+
+    // it('Should output an individual device', async function () {
+    //     if (protoDevices.length > 0) {
+    //         const ret = await completeDevices([protoDevices[0]])
+    //         console.log(ret)
+    //     }
+    // })
+
+
+
+
+
+});
 const controllerTestCases =
 
     [
@@ -34,21 +80,21 @@ const controllerTestCases =
 //     });
 // });
 
-test(`making new controllers`, async () => {
-    const controllers = await controllerGenerator.discoverControllers();
-    //console.log(controllers)
-    let input = '';
-  
-    let count = 1;
+// test(`making new controllers`, async () => {
+//     const controllers = await controllerGenerator.discoverControllers();
+//     //console.log(controllers)
+//     let input = '';
 
-    for (const [key, activeDevice] of Object.entries(controllers)) {
+//     let count = 1;
 
-        deviceList[count] = activeDevice;
-        count++;
+//     for (const [key, activeDevice] of Object.entries(controllers)) {
 
-    }
+//         deviceList[count] = activeDevice;
+//         count++;
 
-});
+//     }
+
+// });
 
 
 // async function makeDevices() {
@@ -69,7 +115,7 @@ test(`making new controllers`, async () => {
 //             }
 //         }
 
-//         //while (input != 'exit') { 
+//         //while (input != 'exit') {
 
 //         // Get user input
 

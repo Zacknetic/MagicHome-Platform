@@ -1,7 +1,7 @@
 import { IAnimationLoop } from './types';
-import { Animations } from './utils/Animations';
+// import { Animations } from './utils/Animations';
 
-export { ControllerGenerator } from './ControllerGenerator';
+export { Controllers as ControllerGenerator } from './Controllers';
 export { BaseController } from './DeviceControllers/BaseController'
 export * from './types'
 
@@ -24,11 +24,11 @@ const thunderstruck: IAnimationLoop = {
         },
         {
             'colorStart': {
-                RGB: { red: 0, green: 255, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
 
             },
             'colorTarget': {
-                RGB: { red: 255, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
             },
             'transitionTimeMS': [2000, 3000],
             'durationAtTargetMS': 100,

@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
 import * as types from '../types';
-import { IDeviceState } from '../types';
+import { IDeviceState } from  'magichome-core';
 
 
 //=================================================
@@ -23,28 +23,6 @@ export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function parseDeviceState(data: Buffer) {
-  let state: IDeviceState = {
-    LEDState: {
-      isOn: data.readUInt8(2) === 0x23,
-      RGB: {
-        red: data.readUInt8(6),
-        green: data.readUInt8(7),
-        blue: data.readUInt8(8),
-      },
-      CCT: {
-        warmWhite: data.readUInt8(9),
-        coldWhite: data.readUInt8(11),
-      },
-    },
-    controllerHardwareVersion: data.readUInt8(1),
-    controllerFirmwareVersion: data.readUInt8(10),
-    rawData: data,
-  }
-  return state;
-}
-
-
 
 export function parseJson<T>(value: string, replacement: T): T {
   try {
@@ -60,8 +38,6 @@ export function loadJson<T>(file: string, replacement: T): T {
   }
   return parseJson<T>(readFileSync(file).toString(), replacement);
 }
-
-
 
 export function delayToSpeed(delay: never) {
   let clamped = clamp(delay, 1, 31);

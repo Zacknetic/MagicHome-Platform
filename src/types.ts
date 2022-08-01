@@ -1,5 +1,4 @@
-import { IColorCCT, IColorRGB, ICommandOptions, IDeviceCommand, IDeviceState } from 'magichome-core';
-
+import {EventNumber, IProtoDevice, ICompleteDevice, COMMAND_TYPE, CommandDefaults, ICommandOptions, IDeviceCommand, IColorRGB, IColorCCT, IDeviceResponse, IDeviceState, IDeviceMetaData, ITransportResponse} from 'magichome-core';
 /*----------------------[Constants]----------------------*/
 
 
@@ -11,11 +10,7 @@ export const DefaultDevice = {
 
 
 /*----------------------[Device State]----------------------*/
-export interface IProtoDevice {
-    ipAddress: string;
-    uniqueId: string;
-    modelNumber: string;
-}
+
 
 export interface ICustomProtoDevice {
     ipAddress: string;
@@ -28,6 +23,7 @@ export interface ICustomProtoDevice {
  */
 export interface IDeviceAPI {
     description: string;
+    byteOrder: any;
     simultaneousCCT: boolean;
     hasColor: boolean;
     hasCCT: boolean;
@@ -44,10 +40,10 @@ export interface IDeviceInformation {
 
 export interface IControllerInformation {
     displayName: string;
-    restartsSinceSeen: number;
+    lastSeenDate: number;
 }
 
-export interface ICustomCompleteDeviceProps {
+export interface ICustomCompleteDevice {
     deviceAPI?: IDeviceAPI,
     protoDevice?: ICustomProtoDevice,
     deviceState?: IDeviceState
