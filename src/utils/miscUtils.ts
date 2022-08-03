@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'fs';
-import * as types from '../types';
+import * as types from './types';
 import { IDeviceState } from  'magichome-core';
 
 

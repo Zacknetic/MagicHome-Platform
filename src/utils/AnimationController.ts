@@ -1,48 +1,30 @@
-import { BaseController } from '../DeviceControllers/BaseController';
-import { Controllers } from '../Controllers';
-import { IAnimationCommand, IAnimationFrame, IAnimationLoop } from '../types';
-import { COMMAND_TYPE, DefaultCommand, ICommandOptions, IDeviceCommand } from 'magichome-core';
+import { BaseController } from '../BaseController';
+import { IAnimationCommand, IAnimationFrame, IAnimationLoop } from './types';
+import { COMMAND_TYPE, defaultCommand, ICommandOptions, IDeviceCommand } from 'magichome-core';
 
 
 
-const { POWER_COMMAND, COLOR_COMMAND, ANIMATION_FRAME, QUERY_COMMAND } = COMMAND_TYPE;
+const { COLOR_COMMAND, ANIMATION_FRAME } = COMMAND_TYPE;
 
-// const controllerGenerator = new ControllerGenerator();
 
-// async function makeControllers() {
-// 	return new Promise<BaseController[]>(async (resolve, reject) => {
-// 		const deviceList: BaseController[] = [];
-// 		const controllers: Map<string, BaseController> = await controllerGenerator.discoverControllers();
-
-// 		let count = 1;
-// 		for (const [key, activeDevice] of Object.entries(controllers)) {
-// 			try {
-// 				// console.log(activeDevice.protoDevice.uniqueId)
-// 				// if (activeDevice.deviceAPI.description == 'RGBWW Simultaneous') {
-// 				deviceList[count] = activeDevice;
-// 				count++;
-// 				// }
-// 			} catch (error) {
-// 				console.log(error, activeDevice)
-// 			}
-// 		}
-// 		animate(deviceList)
-// 	})
-// }
 const commandOptions: ICommandOptions = {
     commandType: COLOR_COMMAND,
     maxRetries: 0,
-    bufferMS: 1000,
-    waitForResponse: true,
+    bufferMS: 100,
+    waitForResponse: false,
     timeoutMS: 0,
     // isAnimationFrame: true
 }
-export class Animations {
+export class AnimationController {
     protected transitionIntervals = [];
     protected transitionTimeouts = [];
-    protected cancelLoop = false;
-    constructor() {
+    protected cancelLoop: boolean = false;
 
+
+    protected assignedControllers: BaseController[] = [];
+
+    constructor(assignedControlers: BaseController[]) {
+        this.assignedControllers = assignedControlers;
     }
 
     public clearAnimations() {
@@ -58,16 +40,25 @@ export class Animations {
 
     }
 
-    public animateTogether(deviceList: BaseController[], animations: IAnimationLoop) {
-        let state = 0
+    public animateAsynchronously(controllers: BaseController[], animations: IAnimationLoop): void {
 
-        let duration = 1000;
+        for (const controller of controllers) {
+            this.animateControllers([controller], animations);
+        }
 
     }
 
-    public async animateIndividual(device:  BaseController[], animations: IAnimationLoop) {
-        if (this.cancelLoop) return;
-       
+    public animateSynchronously(controllers: BaseController[], animations: IAnimationLoop): void {
+
+        this.animateControllers(controllers, animations);
+    }
+
+    private async animateControllers(controllers: BaseController[], animations: IAnimationLoop): Promise<void> {
+        if (this.cancelLoop) {
+            this.cancelLoop = false;
+            return;
+        }
+
         for (const animationFrame of animations.pattern) {
 
             let { transitionTimeMS, durationAtTargetMS, chancePercent, colorStart, colorTarget } = animationFrame;
@@ -77,7 +68,7 @@ export class Animations {
             transitionTimeMS = arrayToRandomInt(transitionTimeMS);
             durationAtTargetMS = arrayToRandomInt(durationAtTargetMS);
 
-            await this.fade(device, colorStart, colorTarget, transitionTimeMS, 50)
+            await this.fade(controllers, colorStart, colorTarget, transitionTimeMS, 50)
             // countClock(Math.round(durationAtTargetMS as number / 100) - 10)
             await new Promise(async (resolve) => {
                 const timeout = await setTimeout(() => {
@@ -88,8 +79,7 @@ export class Animations {
 
 
         }
-        setImmediate(() => this.animateIndividual(device, animations))
-
+        setImmediate(() => this.animateControllers(controllers, animations));
     }
 
     private async fade(deviceList: BaseController[], startCommand: IAnimationCommand, endCommand: IAnimationCommand, duration, interval) {
@@ -101,11 +91,9 @@ export class Animations {
             let u = 0.0;
             const repeat = await setInterval(async function () {
                 if (u >= 1.0 || this.cancelLoop) {
-                    // console.log('clearing interval')
                     clearInterval(repeat);
                     resolve(true)
                 }
-                // console.log(u)
                 let deviceCommand: IDeviceCommand = recursiveLerp(startCommand, endCommand, u)
                 const finalCommand = { ison: true, ...deviceCommand }
                 for (const device of deviceList) {
@@ -119,10 +107,18 @@ export class Animations {
 
     };
 
+    public getAssignedControllers(): BaseController[] {
+        return this.assignedControllers
+    }
+
+    public setAssignedControllers(baseControllers: BaseController[]): void {
+        this.assignedControllers = baseControllers;
+    }
+
 
 }
 
-function recursiveLerp(objOne, objTwo, u, objTarget: IDeviceCommand = DefaultCommand) {
+function recursiveLerp(objOne, objTwo, u, objTarget: IDeviceCommand = defaultCommand) {
     for (var k in objOne) {
         if (typeof objOne[k] == "object" && objOne[k] !== null) {
             objTarget[k] = recursiveLerp(objOne[k], objTwo[k], u, objTarget[k]);

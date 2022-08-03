@@ -1,8 +1,8 @@
 
 import { discoverDevices, ICompleteDevice, IDeviceMetaData, IProtoDevice } from "magichome-core";
 import { BaseController } from "..";
-import { deviceTypesMap, matchingFirmwareVersions } from "../DeviceTypesMap";
-import { IDeviceAPI } from "../types";
+import { deviceTypesMap, matchingFirmwareVersions } from "./deviceTypesMap";
+import { IDeviceAPI } from "./types";
 
 export async function discoverProtoDevices(): Promise<IProtoDevice[] | null> {
     return new Promise(async (resolve, reject) => {

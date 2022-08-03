@@ -1,4 +1,6 @@
-import {EventNumber, IProtoDevice, ICompleteDevice, COMMAND_TYPE, ICommandOptions, IDeviceCommand, IColorRGB, IColorCCT, IDeviceResponse, IDeviceState, IDeviceMetaData, ITransportResponse} from 'magichome-core';
+import { IProtoDevice, IDeviceCommand, IColorRGB, IColorCCT, IDeviceState, ICustomProtoDevice, ICompleteDevice } from 'magichome-core';
+export * from 'magichome-core';
+
 /*----------------------[Constants]----------------------*/
 
 
@@ -9,14 +11,7 @@ export const DefaultDevice = {
 }
 
 
-/*----------------------[Device State]----------------------*/
-
-
-export interface ICustomProtoDevice {
-    ipAddress: string;
-    uniqueId?: string;
-    modelNumber?: string;
-}
+/*----------------------[Device State]--------- -------------*/
 
 /**
  * DeviceAPI
@@ -36,6 +31,7 @@ export interface IDeviceInformation {
     deviceAPI: IDeviceAPI;
     protoDevice: IProtoDevice;
     deviceState: IDeviceState;
+    completeDevice: ICompleteDevice;
 }
 
 export interface IControllerInformation {
@@ -43,16 +39,9 @@ export interface IControllerInformation {
     lastSeenDate: number;
 }
 
-export interface ICustomCompleteDevice {
-    deviceAPI?: IDeviceAPI,
-    protoDevice?: ICustomProtoDevice,
-    deviceState?: IDeviceState
-}
-
 export interface IAnimationLoop {
     'name': string,
     'pattern': IAnimationFrame[],
-    'accessories': string[],
     'accessoryOffsetMS': number,
 }
 
@@ -72,7 +61,18 @@ export type IFailedDeviceProps = IProtoDevice & {
 /*----------------------[Device Commands]----------------------*/
 
 export interface IAnimationCommand {
-    RGB?: IColorRGB;
-    CCT?: IColorCCT;
+    RGB?: IAnimationRGB;
+    CCT?: IAnimationCCT;
     colorMask?: number;
+}
+
+export interface IAnimationRGB {
+    red: number | number[]
+    green: number | number[];
+    blue: number | number[];
+}
+
+export interface IAnimationCCT {
+    warmWhite: number | number[]
+    coldWhite: number | number[];
 }
