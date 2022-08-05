@@ -107,7 +107,7 @@ export class BaseController {
   public async fetchState(_timeout: number = 200): Promise<IDeviceState> {
 
     let scans = 0, completeResponse: ICompleteResponse;
-    while (completeResponse.deviceState == null && scans < 5) {
+    while (completeResponse?.deviceState == null && scans < 5) {
       completeResponse = await this.deviceInterface.queryState(500);
       scans++;
     }
