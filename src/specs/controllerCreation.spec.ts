@@ -18,15 +18,13 @@ const controllerGenerator = new ControllerGenerator();
 let completedDevices;
 let basecontrollers;
 let animation: AnimationController;
+
 describe('Test the scan function for DeviceDiscovery.ts', function () {
 
 
     afterEach(done => {
         setTimeout(done, 100);
     });
-
-
-
 
     it('Should retrieve meta-data on each device', async function () {
         const ret = await controllerGenerator.discoverCompleteDevices();
@@ -35,12 +33,10 @@ describe('Test the scan function for DeviceDiscovery.ts', function () {
         // console.log(ret)
     })
 
-
     it('Should create a controller for each device', async function () {
         const ret = await controllerGenerator.generateControllers(completedDevices);
         // if (ret.length != protoDevices.length) throw new Error("Every proto-device did not retrieve meta-data successfully");
         basecontrollers = ret;
-
     })
     // it('turn on a light', async function () {
     //     // if (basecontrollers.has("DC4F22CF7C31")) {
@@ -54,14 +50,11 @@ describe('Test the scan function for DeviceDiscovery.ts', function () {
     //     // }
     // })
     it('make colors', async function () {
-        const onlineDevices = basecontrollers.filter((controller: BaseController) => {
-            return controller.getCachedDeviceInformation().deviceState.isOn;
-        })
 
         // console.log(onlineDevices)
         // if (basecontrollers.has("DC4F22CF7C31")) {
         //     const a: BaseController = basecontrollers.get("DC4F22CF7C31");
-        animation.animateAsynchronously(onlineDevices, colorWave)
+        animation.animateAsynchronously(basecontrollers, colorWave)
         //     // setTimeout(() => {
         //     //     animation.clearAnimations();
         //     // }, 10000);

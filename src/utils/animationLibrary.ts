@@ -48,8 +48,8 @@ export const thunderstruck: IAnimationLoop = {
             'colorTarget': {
                 RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
             },
-            'transitionTimeMS': 50,
-            'durationAtTargetMS': [5000, 30000],
+            'transitionTimeMS': [30000, 30000],
+            'durationAtTargetMS': [200,500],
             'chancePercent': 100,
         },
     ],
