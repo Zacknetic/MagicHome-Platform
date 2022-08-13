@@ -51,7 +51,14 @@ describe('Test the scan function for DeviceDiscovery.ts', function () {
     // })
     it('make colors', async function () {
 
-        // console.log(onlineDevices)
+        // console.log(basecontrollers)
+        // const onlineDevices = basecontrollers.filter((controller: BaseController) => {
+        //     return controller.getCachedDeviceInformation().deviceState.isOn;
+        // })
+
+        console.log(basecontrollers)
+
+        animation = new AnimationController(basecontrollers)
         // if (basecontrollers.has("DC4F22CF7C31")) {
         //     const a: BaseController = basecontrollers.get("DC4F22CF7C31");
         animation.animateAsynchronously(basecontrollers, colorWave)
