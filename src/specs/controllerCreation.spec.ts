@@ -57,7 +57,7 @@ describe('Test the scan function for DeviceDiscovery.ts', function () {
         // })
 
         console.log(basecontrollers)
-
+        if(basecontrollers.length < 0) return false; 
         animation = new AnimationController(basecontrollers)
         // if (basecontrollers.has("DC4F22CF7C31")) {
         //     const a: BaseController = basecontrollers.get("DC4F22CF7C31");

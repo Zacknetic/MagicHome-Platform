@@ -130,6 +130,6 @@ export class BaseController {
   // }
 
   public getCachedDeviceInformation(): IDeviceInformation {
-    return { deviceAPI: this.deviceAPI, protoDevice: this.protoDevice, deviceState: this.deviceState, completeDevice: this.completeDevice };
+    return { deviceAPI: this.deviceAPI, protoDevice: this.protoDevice, deviceState: this.deviceState, deviceMetaData: this.deviceMetaData };
   }
 }

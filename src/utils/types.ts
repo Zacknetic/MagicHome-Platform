@@ -1,6 +1,4 @@
-import { IProtoDevice, IDeviceCommand, IColorRGB, IColorCCT, IDeviceState, ICustomProtoDevice, ICompleteDevice } from 'magichome-core';
-export * from 'magichome-core';
-
+import { IProtoDevice, IDeviceCommand, IColorRGB, IColorCCT, IDeviceState, ICustomProtoDevice, ICompleteDevice, IDeviceMetaData } from 'magichome-core';
 /*----------------------[Constants]----------------------*/
 
 
@@ -31,7 +29,7 @@ export interface IDeviceInformation {
     deviceAPI: IDeviceAPI;
     protoDevice: IProtoDevice;
     deviceState: IDeviceState;
-    completeDevice: ICompleteDevice;
+    deviceMetaData: IDeviceMetaData
 }
 
 export interface IControllerInformation {

@@ -1,6 +1,6 @@
-import { DirectCommand, ICustomCompleteDevice, IDeviceAPI, IFailedDeviceProps, } from './utils/types';
+import { DirectCommand, IDeviceAPI, IFailedDeviceProps, } from './utils/types';
 import { v1 as UUID } from 'uuid';
-import { discoverDevices, completeDevices, ICommandOptions, ICompleteDevice, IProtoDevice } from 'magichome-core';
+import { discoverDevices, completeDevices, ICommandOptions, ICompleteDevice, IProtoDevice, ICustomCompleteDevice } from 'magichome-core';
 import { BaseController } from './BaseController';
 import { discoverProtoDevices } from './utils/platformUtils';
 import { completeCustomDevices } from 'magichome-core/dist/DeviceDiscovery';
