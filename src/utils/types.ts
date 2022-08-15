@@ -1,4 +1,4 @@
-import { IProtoDevice, IDeviceCommand, IColorRGB, IColorCCT, IDeviceState, ICompleteDevice, IDeviceMetaData } from 'magichome-core';
+import { IProtoDevice, IDeviceState, IDeviceMetaData } from 'magichome-core';
 /*----------------------[Constants]----------------------*/
 
 

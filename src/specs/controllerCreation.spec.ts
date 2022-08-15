@@ -1,5 +1,5 @@
 import { ControllerGenerator } from '../ControllerGenerator';
-import { colorWave, hell, thunderstruck } from '../utils/animationLibrary'
+import { colorTest, colorWave, fireworks, thunderstruck } from '../utils/animationLibrary'
 const deviceList = [];
 
 // import { DeviceInterface } from '../DeviceInterface'
@@ -17,7 +17,7 @@ const controllerGenerator = new ControllerGenerator();
 
 let completedDevices;
 let basecontrollers;
-let animation: AnimationController;
+let animationController: AnimationController;
 
 describe('Test the scan function for DeviceDiscovery.ts', function () {
 
@@ -54,22 +54,17 @@ describe('Test the scan function for DeviceDiscovery.ts', function () {
         // console.log(basecontrollers)
         if (basecontrollers == undefined) return false;
 
-
         const onlineDevices = basecontrollers.filter((controller: BaseController) => {
-            return controller.getCachedDeviceInformation().protoDevice.uniqueId == 'B4E84250DA88'
+            // return controller.getCachedDeviceInformation().protoDevice.uniqueId == 'B4E84250DA88'
+            return controller.getCachedDeviceInformation().deviceState.isOn;
+            // return true;
+
         })
 
-        console.log(onlineDevices)
-        if (onlineDevices == undefined || !onlineDevices) return false;
-        animation = new AnimationController(onlineDevices)
-
-        //     const a: BaseController = basecontrollers.get("DC4F22CF7C31");
-        animation.animateAsynchronously(onlineDevices, hell)
-        //     // setTimeout(() => {
-        //     //     animation.clearAnimations();
-        //     // }, 10000);
-
-
+        console.log(onlineDevices.length)
+        if ( typeof onlineDevices == 'undefined'|| !onlineDevices) return false;
+        animationController = new AnimationController(onlineDevices)
+        animationController.animateAsynchronously(onlineDevices, fireworks)
     })
 
 
