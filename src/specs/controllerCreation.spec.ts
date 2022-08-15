@@ -1,5 +1,5 @@
 import { ControllerGenerator } from '../ControllerGenerator';
-import { colorWave, thunderstruck } from '../utils/animationLibrary'
+import { colorWave, hell, thunderstruck } from '../utils/animationLibrary'
 const deviceList = [];
 
 // import { DeviceInterface } from '../DeviceInterface'
@@ -52,20 +52,23 @@ describe('Test the scan function for DeviceDiscovery.ts', function () {
     it('make colors', async function () {
 
         // console.log(basecontrollers)
-        // const onlineDevices = basecontrollers.filter((controller: BaseController) => {
-        //     return controller.getCachedDeviceInformation().deviceState.isOn;
-        // })
+        if (basecontrollers == undefined) return false;
 
-        console.log(basecontrollers)
-        if(basecontrollers.length < 0) return false; 
-        animation = new AnimationController(basecontrollers)
-        // if (basecontrollers.has("DC4F22CF7C31")) {
+
+        const onlineDevices = basecontrollers.filter((controller: BaseController) => {
+            return controller.getCachedDeviceInformation().protoDevice.uniqueId == 'B4E84250DA88'
+        })
+
+        console.log(onlineDevices)
+        if (onlineDevices == undefined || !onlineDevices) return false;
+        animation = new AnimationController(onlineDevices)
+
         //     const a: BaseController = basecontrollers.get("DC4F22CF7C31");
-        animation.animateAsynchronously(basecontrollers, colorWave)
+        animation.animateAsynchronously(onlineDevices, hell)
         //     // setTimeout(() => {
         //     //     animation.clearAnimations();
         //     // }, 10000);
-        // }
+
 
     })
 

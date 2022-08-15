@@ -1,6 +1,6 @@
-import { DirectCommand, IDeviceAPI, IFailedDeviceProps, } from './utils/types';
+import { IDeviceAPI, IFailedDeviceProps, } from './utils/types';
 import { v1 as UUID } from 'uuid';
-import { discoverDevices, completeDevices, ICommandOptions, ICompleteDevice, IProtoDevice, ICustomCompleteDevice } from 'magichome-core';
+import { discoverDevices, completeDevices, ICommandOptions, ICompleteDevice, IProtoDevice, ICompleteDeviceInfo } from 'magichome-core';
 import { BaseController } from './BaseController';
 import { discoverProtoDevices } from './utils/platformUtils';
 import { completeCustomDevices } from 'magichome-core/dist/DeviceDiscovery';
@@ -37,9 +37,9 @@ export class ControllerGenerator {
 		return activeControllers;
 	}
 
-	public generateCustomControllers(customCompleteDevices: ICustomCompleteDevice[]): BaseController[] {
+	public generateCustomControllers(ICompleteDevicesInfo: ICompleteDeviceInfo[]): BaseController[] {
 
-		const completeDevices: ICompleteDevice[] = completeCustomDevices(customCompleteDevices);
+		const completeDevices: ICompleteDevice[] = completeCustomDevices(ICompleteDevicesInfo);
 		const customControllers: BaseController[] = this.iterateDevices(completeDevices);
 		this.customControllers = customControllers;
 

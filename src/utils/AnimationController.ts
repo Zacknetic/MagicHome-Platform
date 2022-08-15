@@ -1,6 +1,6 @@
 import { BaseController } from '../BaseController';
 import { IAnimationCommand, IAnimationFrame, IAnimationLoop } from './types';
-import { COMMAND_TYPE, defaultCommand, ICommandOptions, IDeviceCommand } from 'magichome-core';
+import { COMMAND_TYPE, DEFAULT_COMMAND, ICommandOptions, IDeviceCommand } from 'magichome-core';
 
 
 
@@ -61,14 +61,17 @@ export class AnimationController {
 
         for (const animationFrame of animations.pattern) {
 
-            let { transitionTimeMS, durationAtTargetMS, chancePercent, colorStart, colorTarget } = animationFrame;
+         
             const rollDice = Math.random() * 100;
             // console.log("DEVILS DICE:", rollDice, " YOUR DICE:", chancePercent)
             if (rollDice > chancePercent) continue;
-            transitionTimeMS = arrayToRandomInt(transitionTimeMS);
-            durationAtTargetMS = arrayToRandomInt(durationAtTargetMS);
 
-            await this.fade(controllers, colorStart, colorTarget, transitionTimeMS, 50)
+            const newFrame = recursiveArrayToInt(animationFrame)
+            let { transitionTimeMS, durationAtTargetMS, chancePercent, colorStart, colorTarget } = animationFrame;
+            // transitionTimeMS = arrayToRandomInt(transitionTimeMS);
+            // durationAtTargetMS = arrayToRandomInt(durationAtTargetMS);
+
+            await this.fade(controllers, colorStart, colorTarget, transitionTimeMS, 200)
             // countClock(Math.round(durationAtTargetMS as number / 100) - 10)
             await new Promise(async (resolve) => {
                 const timeout = await setTimeout(() => {
@@ -118,13 +121,24 @@ export class AnimationController {
 
 }
 
-function recursiveLerp(objOne, objTwo, u, objTarget: IDeviceCommand = defaultCommand) {
+function recursiveLerp(objOne, objTwo, u, objTarget: IDeviceCommand = DEFAULT_COMMAND) {
     for (var k in objOne) {
         if (typeof objOne[k] == "object" && objOne[k] !== null) {
             objTarget[k] = recursiveLerp(objOne[k], objTwo[k], u, objTarget[k]);
         }
         else {
             objTarget[k] = lerp(objOne[k], objTwo[k], u);
+        }
+    }
+    return objTarget;
+}
+
+function recursiveArrayToInt(objOne, objTarget: IDeviceCommand = DEFAULT_COMMAND) {
+    for (var k in objOne) {
+        if (typeof objOne[k] == "object" && objOne[k] !== null) {
+            objTarget[k] = recursiveArrayToInt(objOne[k], objTarget[k]);
+        } else if (Array.isArray(objOne[k])) {
+            objTarget[k] = Math.round(Math.random() * (objOne[k][1] - objOne[k][0]) + objOne[k][0]);
         }
     }
     return objTarget;

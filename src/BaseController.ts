@@ -1,14 +1,13 @@
-import { CommandOptionDefaults, IProtoDevice, ICompleteDevice, COMMAND_TYPE, ICommandOptions, IDeviceCommand, IDeviceState, IDeviceMetaData, DeviceInterface, ColorMasks, ICompleteResponse, defaultCommand } from 'magichome-core';
+import { IProtoDevice, ICompleteDevice, COMMAND_TYPE, ICommandOptions, IDeviceCommand, IDeviceState, IDeviceMetaData, DeviceInterface, COLOR_MASKS, ICompleteResponse, DEFAULT_COMMAND, DEFAULT_COMMAND_OPTIONS, mergeDeep } from 'magichome-core';
 
 import { deviceTypesMap } from './utils/deviceTypesMap';
 import { clamp } from './utils/miscUtils'
-import { _ } from 'lodash'
 import { IDeviceInformation, IDeviceAPI } from './utils/types';
 import { IAnimationLoop } from '.';
 import { getAPI } from './utils/platformUtils';
 
 
-const { white, color, both } = ColorMasks;
+const { WHITE, COLOR, BOTH } = COLOR_MASKS;
 const { POWER_COMMAND, COLOR_COMMAND, ANIMATION_FRAME, QUERY_COMMAND } = COMMAND_TYPE;
 
 export class BaseController {
@@ -30,25 +29,25 @@ export class BaseController {
   constructor(completeDevice: ICompleteDevice) {
     this.completeDevice = completeDevice;
     this.deviceInterface = completeDevice.deviceInterface;
-    this.protoDevice = completeDevice.protoDevice;
-    this.latestUpdateTime = completeDevice.latestUpdate;
+    this.protoDevice = completeDevice.completeDeviceInfo.protoDevice;
+    this.deviceMetaData = completeDevice.completeDeviceInfo.deviceMetaData;
+    this.latestUpdateTime = completeDevice.completeDeviceInfo.latestUpdate;
     this.deviceState = completeDevice.completeResponse.deviceState;
-    this.deviceMetaData = completeDevice.completeResponse.deviceMetaData;
     this.deviceAPI = getAPI(this.deviceMetaData);
 
   };
   //=================================================
   // End Constructor //
 
-  public async setOn(value: boolean, _commandOptions: ICommandOptions = CommandOptionDefaults) {
-    const deviceCommand: IDeviceCommand = Object.assign({}, defaultCommand, { isOn: value })
-    _commandOptions = Object.assign({}, CommandOptionDefaults, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: POWER_COMMAND })
+  public async setOn(value: boolean, _commandOptions?: ICommandOptions) {
+    const deviceCommand: IDeviceCommand = mergeDeep({}, DEFAULT_COMMAND, { isOn: value })
+    _commandOptions = mergeDeep({}, DEFAULT_COMMAND_OPTIONS, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: POWER_COMMAND })
     this.writeCommand(deviceCommand, _commandOptions);
   }
 
-  public async setAllValues(deviceCommand: IDeviceCommand, _commandOptions: ICommandOptions = CommandOptionDefaults) {
+  public async setAllValues(deviceCommand: IDeviceCommand, _commandOptions: ICommandOptions) {
 
-    _commandOptions = Object.assign({}, CommandOptionDefaults, _commandOptions, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: COLOR_COMMAND })
+    _commandOptions = Object.assign({}, DEFAULT_COMMAND_OPTIONS, _commandOptions, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: COLOR_COMMAND })
     this.writeCommand(deviceCommand, _commandOptions)
   }
 
@@ -78,12 +77,6 @@ export class BaseController {
         await setTimeout(async () => {
           const { RGB: { red, green, blue }, CCT: { warmWhite, coldWhite } } = deviceCommand;
           const { isEightByteProtocol } = this.deviceAPI;
-
-          if (!deviceCommand.colorMask) {
-            if (this.deviceAPI.simultaneousCCT) deviceCommand.colorMask = both;
-            if (this.deviceAPI.hasCCT && Math.max(warmWhite, coldWhite) > Math.max(red, green, blue)) deviceCommand.colorMask = white;
-            else deviceCommand.colorMask = color;
-          }
 
           try {
             completeResponse = await this.deviceInterface.sendCommand(deviceCommand, commandOptions);

@@ -1,4 +1,4 @@
-import { IProtoDevice, IDeviceCommand, IColorRGB, IColorCCT, IDeviceState, ICustomProtoDevice, ICompleteDevice, IDeviceMetaData } from 'magichome-core';
+import { IProtoDevice, IDeviceCommand, IColorRGB, IColorCCT, IDeviceState, ICompleteDevice, IDeviceMetaData } from 'magichome-core';
 /*----------------------[Constants]----------------------*/
 
 
@@ -51,7 +51,6 @@ export interface IAnimationFrame {
     'chancePercent': number;
 }
 
-export type DirectCommand = IDeviceCommand & ICustomProtoDevice & IDeviceAPI;
 
 export type IFailedDeviceProps = IProtoDevice & {
     latestScanTimestamp: number;
