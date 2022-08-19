@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
 import * as types from './types';
-import { IDeviceState } from  'magichome-core';
+import { IDeviceState } from 'magichome-core';
 
 
 //=================================================
@@ -48,4 +48,14 @@ export function delayToSpeed(delay: never) {
 export function speedToDelay(speed: never) {
   const clamped = clamp(speed, 0, 100);
   return 30 - (clamped / 100) * 30 + 1;
+}
+
+export async function waitForMe(timeoutMS: number) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (timeoutMS < 0) {
+        resolve(true);
+      }
+    }, timeoutMS);
+  })
 }

@@ -1,11 +1,10 @@
 import { ControllerGenerator } from '../ControllerGenerator';
-import { colorTest, colorWave, fireworks, thunderstruck } from '../utils/animationLibrary'
+import { cctColorWave, cctRgbTest, cctWave, colorTest, colorWave, fireworks, thunderstruck } from '../utils/animationLibrary'
 const deviceList = [];
 
 // import { DeviceInterface } from '../DeviceInterface'
 // import { ICommandOptions, ICommandResponse, IDeviceCommand } from '../types';
 
-import { assert } from 'console';
 import { BaseController } from '../BaseController';
 import { ICommandOptions, IDeviceCommand } from 'magichome-core';
 import { IAnimationLoop } from '../utils/types';
@@ -27,16 +26,30 @@ describe('Test the scan function for DeviceDiscovery.ts', function () {
     });
 
     it('Should retrieve meta-data on each device', async function () {
-        const ret = await controllerGenerator.discoverCompleteDevices();
-        // if (ret.length != protoDevices.length) throw new Error("Every proto-device did not retrieve meta-data successfully");
-        completedDevices = ret;
-        // console.log(ret)
+        try {
+
+
+
+            const ret = await controllerGenerator.discoverCompleteDevices().catch(e => { console.log(e) });
+            // if (ret.length != protoDevices.length) throw new Error("Every proto-device did not retrieve meta-data successfully");
+            completedDevices = ret;
+        } catch (error) {
+            console.log(error)
+        }
     })
 
-    it('Should create a controller for each device', async function () {
-        const ret = await controllerGenerator.generateControllers(completedDevices);
-        // if (ret.length != protoDevices.length) throw new Error("Every proto-device did not retrieve meta-data successfully");
-        basecontrollers = ret;
+    it('Should create a controller for each device', function () {
+        try {
+
+
+            const ret = controllerGenerator.generateControllers(completedDevices);
+            // if (ret.length != protoDevices.length) throw new Error("Every proto-device did not retrieve meta-data successfully");
+            basecontrollers = ret;
+
+        } catch (error) {
+            console.log(error)
+            return
+        }
     })
     // it('turn on a light', async function () {
     //     // if (basecontrollers.has("DC4F22CF7C31")) {
@@ -52,19 +65,26 @@ describe('Test the scan function for DeviceDiscovery.ts', function () {
     it('make colors', async function () {
 
         // console.log(basecontrollers)
-        if (basecontrollers == undefined) return false;
+        try {
+            if (basecontrollers == undefined) return false;
 
-        const onlineDevices = basecontrollers.filter((controller: BaseController) => {
-            // return controller.getCachedDeviceInformation().protoDevice.uniqueId == 'B4E84250DA88'
-            return controller.getCachedDeviceInformation().deviceState.isOn;
-            // return true;
 
-        })
 
-        console.log(onlineDevices.length)
-        if ( typeof onlineDevices == 'undefined'|| !onlineDevices) return false;
-        animationController = new AnimationController(onlineDevices)
-        animationController.animateAsynchronously(onlineDevices, fireworks)
+            const onlineDevices = basecontrollers.filter((controller: BaseController) => {
+                return controller.getCachedDeviceInformation().protoDevice.uniqueId == 'B4E84250DA88'
+                // return controller.getCachedDeviceInformation().deviceState.isOn;
+                // return true;
+
+            })
+
+            console.log(onlineDevices.length)
+            if (typeof onlineDevices == 'undefined' || !onlineDevices) return false;
+            animationController = new AnimationController(onlineDevices)
+            animationController.animateAsynchronously(onlineDevices, cctColorWave)
+        } catch (error) {
+            console.log(error)
+            return;
+        }
     })
 
 

@@ -1,10 +1,11 @@
 import { IProtoDevice, ICompleteDevice, COMMAND_TYPE, ICommandOptions, IDeviceCommand, IDeviceState, IDeviceMetaData, DeviceInterface, COLOR_MASKS, ICompleteResponse, DEFAULT_COMMAND, DEFAULT_COMMAND_OPTIONS, mergeDeep } from 'magichome-core';
 
 import { deviceTypesMap } from './utils/deviceTypesMap';
-import { clamp } from './utils/miscUtils'
+import { clamp, waitForMe } from './utils/miscUtils'
 import { IDeviceInformation, IDeviceAPI } from './utils/types';
 import { IAnimationLoop } from '.';
-import { getAPI } from './utils/platformUtils';
+import { adjustCommandToAPI, getAPI } from './utils/platformUtils';
+import { overwriteDeep } from 'magichome-core/dist/utils/miscUtils';
 
 
 const { WHITE, COLOR, BOTH } = COLOR_MASKS;
@@ -22,7 +23,6 @@ export class BaseController {
   protected protoDevice: IProtoDevice;
   protected deviceAPI: IDeviceAPI;
   protected latestUpdateTime: number
-  protected sendCommand;
 
   //=================================================
   // Start Constructor //
@@ -39,62 +39,44 @@ export class BaseController {
   //=================================================
   // End Constructor //
 
-  public async setOn(value: boolean, _commandOptions?: ICommandOptions) {
-    const deviceCommand: IDeviceCommand = mergeDeep({}, DEFAULT_COMMAND, { isOn: value })
-    _commandOptions = mergeDeep({}, DEFAULT_COMMAND_OPTIONS, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: POWER_COMMAND })
-    this.writeCommand(deviceCommand, _commandOptions);
+  public async setOn(value: boolean) {
+    const deviceCommand: IDeviceCommand = mergeDeep({}, { isOn: value }, DEFAULT_COMMAND)
+    const commandOptions = mergeDeep({}, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: POWER_COMMAND }, DEFAULT_COMMAND_OPTIONS)
+    if (!deviceCommand.isOn && this.deviceState.isOn) await this.deviceInterface.sendCommand(deviceCommand, commandOptions);
+    return await this.deviceInterface.sendCommand(deviceCommand, commandOptions);
   }
 
-  public async setAllValues(deviceCommand: IDeviceCommand, _commandOptions: ICommandOptions) {
+  public async setAllValues(deviceCommand: IDeviceCommand, commandOptions?: ICommandOptions) {
 
-    _commandOptions = Object.assign({}, DEFAULT_COMMAND_OPTIONS, _commandOptions, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: COLOR_COMMAND })
-    this.writeCommand(deviceCommand, _commandOptions)
-  }
-
-  private overwriteLocalState(completeResponse: ICompleteResponse): boolean {
-    try {
-      this.deviceState = Object.assign({}, this.deviceState, completeResponse.deviceState);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    mergeDeep(commandOptions, { colorAssist: true, isEightByteProtocol: this.deviceAPI.isEightByteProtocol, timeoutMS: 50, bufferMS: 50, commandType: COLOR_COMMAND, maxRetries: 5, remainingRetries: 5 })
+    // mergeDeep(commandOptions, DEFAULT_COMMAND_OPTIONS)
+    this.writeCommand(deviceCommand, commandOptions)
   }
 
   private async writeCommand(deviceCommand: IDeviceCommand, commandOptions: ICommandOptions): Promise<ICompleteResponse | boolean> {
-    let completeResponse;
 
-    if (commandOptions.commandType == POWER_COMMAND) {
-      if (!deviceCommand.isOn && this.deviceState.isOn) this.deviceInterface.sendCommand(deviceCommand, commandOptions);
-      completeResponse = await this.deviceInterface.sendCommand(deviceCommand, commandOptions);
-    } else {
-      let powerUpWaitTime = 0;
-      if (this.deviceAPI.needsPowerCommand && !this.deviceState.isOn) {
-        powerUpWaitTime = 500;
-        this.deviceInterface.sendCommand(null, { commandType: POWER_COMMAND, waitForResponse: false });
+    this.precheckPowerState();
+    const newDeviceCommand = adjustCommandToAPI(deviceCommand, commandOptions, this.deviceAPI);
+    let completeResponse: ICompleteResponse;
+    try {
+      completeResponse = await this.deviceInterface.sendCommand(newDeviceCommand, commandOptions);
+    } catch (error) {
+      if (this.deviceAPI.isEightByteProtocol === null) {
+        //console.log("CHANGING DEVICE PROTOCOL", this.deviceAPI.description, this.protoDevice.uniqueId, this.deviceState.controllerFirmwareVersion, this.deviceState.controllerHardwareVersion);
+        this.deviceAPI.isEightByteProtocol = true;
+        completeResponse = await this.deviceInterface.sendCommand(newDeviceCommand, commandOptions).catch(()=> {throw "NOT GETTING BACK RESPONSE PLATFORM"});
       }
-
-      completeResponse = new Promise(async resolve => {
-        await setTimeout(async () => {
-          const { RGB: { red, green, blue }, CCT: { warmWhite, coldWhite } } = deviceCommand;
-          const { isEightByteProtocol } = this.deviceAPI;
-
-          try {
-            completeResponse = await this.deviceInterface.sendCommand(deviceCommand, commandOptions);
-          } catch (error) {
-            if (this.deviceAPI.isEightByteProtocol === null) {
-              //console.log("CHANGING DEVICE PROTOCOL", this.deviceAPI.description, this.protoDevice.uniqueId, this.deviceState.controllerFirmwareVersion, this.deviceState.controllerHardwareVersion);
-              this.deviceAPI.isEightByteProtocol = true;
-              completeResponse = await this.writeCommand(deviceCommand, commandOptions);
-            }
-          }
-
-          resolve(completeResponse);
-        }, powerUpWaitTime);
-      })
-
     }
-    this.overwriteLocalState(completeResponse);
+    console.log(completeResponse)
+    if (completeResponse.responseCode > 0) this.overwriteLocalState(completeResponse);
     return completeResponse;
+  }
+
+  private async precheckPowerState() {
+    if (this.deviceAPI.needsPowerCommand && !this.deviceState.isOn) {
+      this.deviceInterface.sendCommand(null, { commandType: POWER_COMMAND, waitForResponse: false });
+      await waitForMe(500);
+    }
   }
 
   public async fetchState(_timeout: number = 200): Promise<IDeviceState> {
@@ -110,6 +92,17 @@ export class BaseController {
     }
   }
 
+  private overwriteLocalState(completeResponse: ICompleteResponse): void {
+
+    try {
+      // console.log("THIS STATE: ", this.deviceState);
+      // console.log("NEW STATE: ", completeResponse.deviceState);
+      overwriteDeep(this.deviceState, completeResponse.deviceState);
+
+    } catch (error) {
+      console.log("MH PLATFORM ERROR: ", error)
+    }
+  }
 
 
   // public cacheCurrentLightState() {
@@ -126,3 +119,4 @@ export class BaseController {
     return { deviceAPI: this.deviceAPI, protoDevice: this.protoDevice, deviceState: this.deviceState, deviceMetaData: this.deviceMetaData };
   }
 }
+

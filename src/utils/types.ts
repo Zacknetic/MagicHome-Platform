@@ -15,14 +15,14 @@ export const DefaultDevice = {
  * DeviceAPI
  */
 export interface IDeviceAPI {
-    description: string;
     byteOrder: any;
-    simultaneousCCT: boolean;
+    description: string;
     hasColor: boolean;
     hasCCT: boolean;
     hasBrightness: boolean;
     isEightByteProtocol: boolean;
     needsPowerCommand?: boolean;
+    simultaneousCCT: boolean;
 }
 
 export interface IDeviceInformation {

@@ -8,7 +8,7 @@ import { clamp } from './miscUtils';
 const { COLOR_COMMAND } = COMMAND_TYPE;
 const INTERVAL_MS = 25; //time period in milliseconds between each command. i.e. An interval_MS of 25 is 1000ms / 25ms/frame = 40frames/s
 
-const commandOptions: ICommandOptions = {
+const DEFAULT_COMMAND_OPTIONS: ICommandOptions = {
     commandType: COLOR_COMMAND,
     maxRetries: 0,
     bufferMS: 100,
@@ -49,12 +49,6 @@ export class AnimationController {
     public async animateAsynchronously(controllers: BaseController[], animations: IAnimationLoop): Promise<void> {
         this.cancelLoop = false;
         for (const controller of controllers) {
-            await new Promise(async (resolve) => {
-                const timeout = await setTimeout(() => {
-                    resolve(true)
-                }, animations.accessoryOffsetMS as number);
-
-            })
             this.animateControllers([controller], animations);
         }
 
@@ -100,7 +94,7 @@ export class AnimationController {
         setImmediate(() => this.animateControllers(controllers, animations, previousState));
     }
 
-    private async fade(deviceList: BaseController[], startCommand: IAnimationCommand, endCommand: IAnimationCommand, duration, interval) {
+    private async fade(controllers: BaseController[], startCommand: IAnimationCommand, endCommand: IAnimationCommand, duration, interval) {
 
         return new Promise(async (resolve) => {
 
@@ -115,8 +109,8 @@ export class AnimationController {
                 }
                 let deviceCommand: IDeviceCommand = recursiveLerp(startCommand, endCommand, u);
                 const finalCommand = { isOn: true, ...deviceCommand }
-                for (const device of deviceList) {
-                    await device.setAllValues(finalCommand, commandOptions);
+                for (const controller of controllers) {
+                    await controller.setAllValues(finalCommand, {waitForResponse: false, commandType: COLOR_COMMAND, colorAssist: true});
                 }
                 u += step_u;
             }, interval);
@@ -127,7 +121,7 @@ export class AnimationController {
     };
 
     public getAssignedControllers(): BaseController[] {
-        return this.assignedControllers
+        return this.assignedControllers;
     }
 
     public setAssignedControllers(baseControllers: BaseController[]): void {
@@ -177,18 +171,4 @@ function lerp(a, b, u) {
 //         arr = Math.round(Math.random() * (arr[1] - arr[0]) + arr[0]);
 //     }
 //     return arr;
-// }
-
-// async function countClock(time) {
-//     return new Promise((resolve) => {
-
-//         const inter = setInterval(() => {
-//             console.log("Time Left: ", time)
-//             time--;
-//             if (time < 0) {
-//                 clearInterval(inter);
-//                 resolve(true);
-//             }
-//         }, 1000);
-//     })
 // }
