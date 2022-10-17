@@ -11,7 +11,7 @@
     "build": "tsc",
     "test": "jest",
     "watch": "npm run build && npm link && nodemon || exit 1",
-    "test:watch": "ts-mocha --timeout 10000 --exit --watch-extensions ts --watch --watch-files src 'src/specs/*.spec.ts'"
+    "test:watch": "ts-mocha --timeout 50000 --exit --watch-extensions ts --watch --watch-files src 'src/specs/*.spec.ts'"
   },
   "repository": {
     "type": "git",

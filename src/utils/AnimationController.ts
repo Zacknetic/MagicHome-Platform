@@ -1,7 +1,9 @@
 import { BaseController } from '../BaseController';
 import { IAnimationCommand, IAnimationFrame, IAnimationLoop } from './types';
-import { COMMAND_TYPE, DEFAULT_COMMAND, ICommandOptions, IDeviceCommand, mergeDeep } from 'magichome-core';
+import { COLOR_MASKS, COMMAND_TYPE, DEFAULT_COMMAND, ICommandOptions, ICompleteDevice, ICompleteResponse, IDeviceCommand, IDeviceState, isStateEqual, mergeDeep } from 'magichome-core';
 import { clamp } from './miscUtils';
+import { overwriteDeep, sleepTimeout } from 'magichome-core/dist/utils/miscUtils';
+import { isCommandEqual } from './platformUtils';
 
 
 
@@ -20,10 +22,8 @@ export class AnimationController {
     protected transitionIntervals = [];
     protected transitionTimeouts = [];
     protected cancelLoop: boolean = false;
-    protected previousState: IAnimationCommand;
-
     protected assignedControllers: BaseController[] = [];
-
+    public isActive: boolean = false;
     constructor(assignedControlers: BaseController[]) {
         this.assignedControllers = assignedControlers;
     }
@@ -33,33 +33,28 @@ export class AnimationController {
         this.cancelLoop = true;
         while (this.transitionIntervals.length > 0) {
             this.cancelLoop = true;
-
             const interval = this.transitionIntervals.pop()
             clearInterval(interval);
         }
         while (this.transitionTimeouts.length > 0) {
             this.cancelLoop = true;
-
             const timeout = this.transitionTimeouts.pop()
             clearTimeout(timeout);
         }
+        this.isActive = false;
 
     }
 
     public async animateAsynchronously(controllers: BaseController[], animations: IAnimationLoop): Promise<void> {
         this.cancelLoop = false;
+        this.isActive = true;
         for (const controller of controllers) {
             this.animateControllers([controller], animations);
         }
-
-        // await countClock(5)
-        // console.log('arrive here yet?')
-        // this.clearAnimations()
-
-
     }
 
     public animateSynchronously(controllers: BaseController[], animations: IAnimationLoop): void {
+        this.isActive = true;
         this.cancelLoop = false;
         this.animateControllers(controllers, animations);
     }
@@ -70,55 +65,69 @@ export class AnimationController {
             return;
         }
 
-        for (const animationFrame of animations.pattern) {
+        if (!this.cancelLoop) {
+            for (const animationFrame of animations.pattern) {
+                const newFrame: IAnimationFrame = recursiveArrayToInt(animationFrame)
 
-            const newFrame: IAnimationFrame = recursiveArrayToInt(animationFrame)
+                let { transitionTimeMS, durationAtTargetMS, chancePercent, colorStart, colorTarget } = newFrame;
+                if (!colorStart) colorStart = previousState ?? DEFAULT_COMMAND;
+                previousState = colorTarget;
+                const rollDice = Math.random() * 100;
+                // console.log("DEVILS DICE:", rollDice, " YOUR DICE:", chancePercent)
+                if (rollDice > chancePercent) continue;
 
-            let { transitionTimeMS, durationAtTargetMS, chancePercent, colorStart, colorTarget } = newFrame;
-            if (!colorStart) colorStart = previousState ?? DEFAULT_COMMAND;
-            previousState = colorTarget;
-            const rollDice = Math.random() * 100;
-            // console.log("DEVILS DICE:", rollDice, " YOUR DICE:", chancePercent)
-            if (rollDice > chancePercent) continue;
+                await new Promise(async (resolve) => {
+                    if (durationAtTargetMS > 1500 && isCommandEqual(colorStart, colorTarget)) {
+                        this.sendStep(controllers, colorStart, colorTarget, 1, true).catch(e => { })
+                        await setTimeout(() => {
+                            resolve(true);
+                            return;
+                        }, durationAtTargetMS as number)
+                    }
+                    await this.fade(controllers, colorStart, colorTarget, transitionTimeMS, INTERVAL_MS);
+                    const timeout = await setTimeout(() => {
+                        resolve(true)
+                    }, durationAtTargetMS as number);
+                    this.transitionTimeouts.push(timeout)
+                })
 
-            await this.fade(controllers, colorStart, colorTarget, transitionTimeMS, INTERVAL_MS);
-            await new Promise(async (resolve) => {
-                const timeout = await setTimeout(() => {
-                    resolve(true)
-                }, durationAtTargetMS as number);
-                this.transitionTimeouts.push(timeout)
-            })
 
-
+            }
+            setImmediate(() => this.animateControllers(controllers, animations, previousState));
         }
-        setImmediate(() => this.animateControllers(controllers, animations, previousState));
     }
 
     private async fade(controllers: BaseController[], startCommand: IAnimationCommand, endCommand: IAnimationCommand, duration, interval) {
 
         return new Promise(async (resolve) => {
-
             const steps = duration / interval;
             const step_u = 1.0000 / steps;
             let u = 0.0000;
+
+
             const repeat = await setInterval(async () => {
-                if (u > 1.0 || this.cancelLoop) {
+                if (u >= 1.0) {
+                    u = 1.0;
+                    this.sendStep(controllers, startCommand, endCommand, u, false).catch(e => { })
                     clearInterval(repeat);
                     resolve(true);
                     return;
                 }
-                let deviceCommand: IDeviceCommand = recursiveLerp(startCommand, endCommand, u);
-                const finalCommand = { isOn: true, ...deviceCommand }
-                for (const controller of controllers) {
-                    await controller.setAllValues(finalCommand, {waitForResponse: false, commandType: COLOR_COMMAND, colorAssist: true});
-                }
+                u = Math.min(u, 1);
+                this.sendStep(controllers, startCommand, endCommand, u, false).catch(e => { })
                 u += step_u;
             }, interval);
             this.transitionIntervals.push(repeat)
-
         })
-
     };
+
+    async sendStep(controllers: BaseController[], startCommand: IAnimationCommand, endCommand: IAnimationCommand, u, waitForResponse) {
+        let deviceCommand: IDeviceCommand = recursiveLerp(startCommand, endCommand, u);
+        const finalCommand = overwriteDeep(deviceCommand, { isOn: true })
+        for (const controller of controllers) {
+            await controller.setAllValues(finalCommand, { waitForResponse, commandType: null, colorAssist: true, timeoutMS: 500, maxRetries: 5 });
+        }
+    }
 
     public getAssignedControllers(): BaseController[] {
         return this.assignedControllers;

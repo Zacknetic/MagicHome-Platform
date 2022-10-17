@@ -1,6 +1,6 @@
 import { IAnimationLoop } from "./types";
 
-export const thunderstruck: IAnimationLoop = {
+export const thunderStruck: IAnimationLoop = {
 
     'name': 'ThunderStruck',
     'pattern': [
@@ -48,7 +48,63 @@ export const thunderstruck: IAnimationLoop = {
             'colorTarget': {
                 RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
             },
-            'transitionTimeMS': 0,
+            'transitionTimeMS': 500,
+            'durationAtTargetMS': [5000, 10000],
+            'chancePercent': 100,
+        },
+    ],
+    'accessoryOffsetMS': 0,
+};
+
+export const hellStruck: IAnimationLoop = {
+
+    'name': 'HellStruck',
+    'pattern': [
+        {
+            'colorStart': {
+                RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+            },
+            'transitionTimeMS': 50,
+            'durationAtTargetMS': 50,
+            'chancePercent': 50,
+        },
+        {
+            'colorStart': {
+                RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+            },
+            'transitionTimeMS': 50,
+            'durationAtTargetMS': 100,
+            'chancePercent': 100,
+        },
+        {
+            'colorStart': {
+                RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+            },
+            'transitionTimeMS': 50,
+            'durationAtTargetMS': 50,
+            'chancePercent': 100,
+        },
+        {
+            'colorStart': {
+                RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+            },
+            'transitionTimeMS': 500,
             'durationAtTargetMS': [5000, 10000],
             'chancePercent': 100,
         },
@@ -150,12 +206,28 @@ export const cctWave: IAnimationLoop = {
         },
         {
             'colorTarget': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 255, coldWhite: 255 },
+            },
+            'transitionTimeMS': 1000,
+            'durationAtTargetMS': 0,
+            'chancePercent': 100,
+        },
+        {
+            'colorTarget': {
                 RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
             },
             'transitionTimeMS': 1000,
             'durationAtTargetMS': 0,
             'chancePercent': 100,
-        }
+        },
+        {
+            'colorTarget': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 255, coldWhite: 255 },
+            },
+            'transitionTimeMS': 1000,
+            'durationAtTargetMS': 0,
+            'chancePercent': 100,
+        },
     ],
     'accessoryOffsetMS': 0,
 };

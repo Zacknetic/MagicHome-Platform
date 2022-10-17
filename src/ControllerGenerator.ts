@@ -22,8 +22,7 @@ export class ControllerGenerator {
 	 */
 	public async discoverCompleteDevices(): Promise<ICompleteDevice[] | null> {
 		const protoDevices: IProtoDevice[] = await discoverProtoDevices().catch(error => {
-			console.log(error)
-			return null;
+			throw error;
 		});
 
 		const completedDevices: ICompleteDevice[] = await completeDevices(protoDevices);
@@ -50,6 +49,7 @@ export class ControllerGenerator {
 		const devices: BaseController[] = [];
 		for (const completeDevice of completeDevices) {
 			const deviceController: BaseController = new BaseController(completeDevice);
+			deviceController.initializeController();
 			devices.push(deviceController)
 		}
 		return devices;

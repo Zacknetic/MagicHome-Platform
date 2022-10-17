@@ -38,17 +38,18 @@ export interface IControllerInformation {
 }
 
 export interface IAnimationLoop {
-    'name': string,
-    'pattern': IAnimationFrame[],
-    'accessoryOffsetMS': number,
+    name: string,
+    pattern: IAnimationFrame[],
+    accessoryOffsetMS: number,
 }
 
 export interface IAnimationFrame {
-    'colorStart'?: IAnimationCommand,
-    'colorTarget': IAnimationCommand,
-    'transitionTimeMS': number | number[],
-    'durationAtTargetMS'?: number | number[];
-    'chancePercent': number;
+    colorStart?: IAnimationCommand,
+    colorTarget: IAnimationCommand,
+    transitionTimeMS: number | number[],
+    durationAtTargetMS?: number | number[];
+    chancePercent: number;
+    reSyncMs?: number | number[];
 }
 
 
