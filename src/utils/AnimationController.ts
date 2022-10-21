@@ -22,14 +22,15 @@ export class AnimationController {
     protected transitionIntervals = [];
     protected transitionTimeouts = [];
     protected cancelLoop: boolean = false;
-    protected assignedControllers: BaseController[] = [];
+    protected assignedControllers = new Set<String>([
+
+    ])
     public isActive: boolean = false;
-    constructor(assignedControlers: BaseController[]) {
-        this.assignedControllers = assignedControlers;
+    constructor() {
+
     }
 
     public clearAnimations() {
-        console.log('clearing animations!')
         this.cancelLoop = true;
         while (this.transitionIntervals.length > 0) {
             this.cancelLoop = true;
@@ -48,6 +49,7 @@ export class AnimationController {
     public async animateAsynchronously(controllers: BaseController[], animations: IAnimationLoop): Promise<void> {
         this.cancelLoop = false;
         this.isActive = true;
+        this.createControllerSet(controllers);
         for (const controller of controllers) {
             this.animateControllers([controller], animations);
         }
@@ -56,7 +58,19 @@ export class AnimationController {
     public animateSynchronously(controllers: BaseController[], animations: IAnimationLoop): void {
         this.isActive = true;
         this.cancelLoop = false;
+        this.createControllerSet(controllers);
         this.animateControllers(controllers, animations);
+    }
+
+    createControllerSet(controllers: BaseController[]) {
+        for (const controller of controllers) {
+            const uniqueId = controller.getCachedDeviceInformation().protoDevice.uniqueId
+            this.assignedControllers.add(uniqueId)
+        }
+    }
+
+    public removeControllerFromAnimation(uniqueId: string) {
+        if (this.assignedControllers.has(uniqueId)) this.assignedControllers.delete(uniqueId);
     }
 
     private async animateControllers(controllers: BaseController[], animations: IAnimationLoop, previousState?: IAnimationCommand): Promise<void> {
@@ -77,13 +91,6 @@ export class AnimationController {
                 if (rollDice > chancePercent) continue;
 
                 await new Promise(async (resolve) => {
-                    if (durationAtTargetMS > 1500 && isCommandEqual(colorStart, colorTarget)) {
-                        this.sendStep(controllers, colorStart, colorTarget, 1, true).catch(e => { })
-                        await setTimeout(() => {
-                            resolve(true);
-                            return;
-                        }, durationAtTargetMS as number)
-                    }
                     await this.fade(controllers, colorStart, colorTarget, transitionTimeMS, INTERVAL_MS);
                     const timeout = await setTimeout(() => {
                         resolve(true)
@@ -127,14 +134,6 @@ export class AnimationController {
         for (const controller of controllers) {
             await controller.setAllValues(finalCommand, { waitForResponse, commandType: null, colorAssist: true, timeoutMS: 500, maxRetries: 5 });
         }
-    }
-
-    public getAssignedControllers(): BaseController[] {
-        return this.assignedControllers;
-    }
-
-    public setAssignedControllers(baseControllers: BaseController[]): void {
-        this.assignedControllers = baseControllers;
     }
 
 

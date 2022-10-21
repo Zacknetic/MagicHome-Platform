@@ -86,7 +86,7 @@ describe('Test the scan function for DeviceDiscovery.ts', function () {
            
                 return false;
             } 
-            animationController = new AnimationController(onlineDevices)
+            animationController = new AnimationController()
             animationController.animateAsynchronously(onlineDevices, hellStruck)
             // await sleepTimeout(200000);
             // animationController.clearAnimations();

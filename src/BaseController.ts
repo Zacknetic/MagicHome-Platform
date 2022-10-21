@@ -39,18 +39,29 @@ export class BaseController {
   //=================================================
   // End Constructor //
 
-  public setOn(value: boolean) {
+  public async setOn(value: boolean) {
+    await this.fetchState(500).then(res => res).catch(e => {
+      throw e
+      // console.log(e)
+    });
     const deviceCommand: IDeviceCommand = mergeDeep({}, { isOn: value }, DEFAULT_COMMAND)
     const commandOptions = mergeDeep({}, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: POWER_COMMAND }, DEFAULT_COMMAND_OPTIONS)
-    if (!deviceCommand.isOn && this.deviceState.isOn) this.deviceInterface.sendCommand(deviceCommand, commandOptions);
-    this.deviceInterface.sendCommand(deviceCommand, commandOptions)
+    if (deviceCommand.isOn != this.deviceState.isOn) this.deviceInterface.sendCommand(deviceCommand, commandOptions).then(res => res).catch(e => {
+      throw e
+      // console.log(e)
+    });
+    // this.deviceInterface.sendCommand(deviceCommand, commandOptions)
   }
 
-  public setAllValues(deviceCommand: IDeviceCommand, commandOptions?: ICommandOptions) {
+  public async setAllValues(deviceCommand: IDeviceCommand, commandOptions?: ICommandOptions) {
 
     mergeDeep(commandOptions, { colorAssist: true, isEightByteProtocol: this.deviceAPI.isEightByteProtocol, timeoutMS: 50, bufferMS: 50, commandType: COLOR_COMMAND, maxRetries: 5 })
     mergeDeep(commandOptions, DEFAULT_COMMAND_OPTIONS)
-    this.writeCommand(deviceCommand, commandOptions);
+    await this.writeCommand(deviceCommand, commandOptions).catch(e => {
+      if (e.responseCode < 0)
+        throw e
+      // console.log('setAllValues', e)
+    });
   }
 
   private async writeCommand(deviceCommand: IDeviceCommand, commandOptions: ICommandOptions) {
@@ -58,23 +69,31 @@ export class BaseController {
     const newDeviceCommand = adjustCommandToAPI(deviceCommand, commandOptions, this.deviceAPI);
     await this.precheckPowerState(deviceCommand, commandOptions);
 
-    const completeResponse = await this.deviceInterface.sendCommand(newDeviceCommand, commandOptions).catch(e => { }) as ICompleteResponse
+    await this.deviceInterface.sendCommand(newDeviceCommand, commandOptions).then(res => {
+      if (res.responseCode > 0) this.overwriteLocalState(res.deviceState);
+    }).catch(e => {
+      throw e
+      // console.log(e)
+    });
 
     // if (this.deviceAPI.isEightByteProtocol === null) {
     //   this.deviceAPI.isEightByteProtocol = true;
     //   return await this.writeCommand(deviceCommand, commandOptions)
     // }
 
-    if (completeResponse.responseCode > 0) this.overwriteLocalState(completeResponse.deviceState);
+
   }
 
   private async precheckPowerState(deviceCommand: IDeviceCommand, commandOptions: ICommandOptions) {
     // console.log(this.deviceState.isOn)
     if (this.first && this.deviceAPI.needsPowerCommand && !this.deviceState.isOn && deviceCommand.isOn) {
-      this.deviceInterface.sendCommand({ isOn: true, RGB: null, CCT: null }, { commandType: POWER_COMMAND, waitForResponse: false, maxRetries: 0, timeoutMS: 50 });
+      this.deviceInterface.sendCommand({ isOn: true, RGB: null, CCT: null }, { commandType: POWER_COMMAND, waitForResponse: false, maxRetries: 0, timeoutMS: 50 }).then(res => res).catch(e => {
+        throw e
+        // console.log(e)
+      });
       this.first = false;
       // await waitForMe(500).catch(e => { throw 'waitforme somehow failed?' });
-      this.overwriteLocalState( {isOn: true} as IDeviceState)
+      this.overwriteLocalState({ isOn: true } as IDeviceState)
     }
   }
 
@@ -82,11 +101,16 @@ export class BaseController {
 
     let scans = 0, completeResponse: ICompleteResponse;
     do {
-      completeResponse = await this.deviceInterface.queryState(timeout).catch(e => { throw e });
+      await this.deviceInterface.queryState(timeout).then(res => completeResponse = res)
+        .catch(e => {
+          throw e
+          // console.log(e)
+        });
       scans++;
     } while (completeResponse?.deviceState == null && scans < 5)
-    if (typeof completeResponse == 'undefined') throw 'no response given'
-    this.deviceState = completeResponse.deviceState;
+    if (typeof completeResponse == 'undefined') throw 'no response given';
+
+    this.overwriteLocalState(completeResponse.deviceState);
     return completeResponse.deviceState;
 
   }
