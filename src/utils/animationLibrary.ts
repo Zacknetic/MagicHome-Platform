@@ -1,60 +1,189 @@
 import { IAnimationLoop } from "./types";
-
-export const thunderStruck: IAnimationLoop = {
-
-    'name': 'ThunderStruck',
-    'pattern': [
+import { IAnimationBlueprint } from "./chatGPTAnimation";
+import { InterpolationType } from "./miscUtils";
+export const rainbow: IAnimationBlueprint = {
+    name: "rainbow",
+    priority: 9,
+    syncSequenceTimings: false,
+    syncSequenceColor: true,
+    lightOffsetDurationMS: 0,
+    animationSequences: [
         {
-            'colorStart': {
-                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
-
+            targetColor: {
+                red: 255,
+                green: 0,
+                blue: 0,
+                warmWhite: 0,
+                coldWhite: 0,
             },
-            'colorTarget': {
-                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
-            },
-            'transitionTimeMS': 50,
-            'durationAtTargetMS': 50,
-            'chancePercent': 50,
+            transitionDurationMS: 5000,
+            durationAtTargetMS: 0,
+            interpolationType: InterpolationType.EASE_IN_CUBIC,
+            skipChance: 0,
         },
         {
-            'colorStart': {
-                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
-
+            targetColor: {
+                red: 0,
+                green: 255,
+                blue: 0,
+                warmWhite: 0,
+                coldWhite: 0,
             },
-            'colorTarget': {
-                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
-            },
-            'transitionTimeMS': 50,
-            'durationAtTargetMS': 100,
-            'chancePercent': 100,
+            transitionDurationMS: 5000,
+            durationAtTargetMS: 0,
+            interpolationType: InterpolationType.EASE_IN_CUBIC,
+            skipChance: 0,
         },
         {
-            'colorStart': {
-                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+            targetColor: {
+                red: 0,
+                green: 0,
+                blue: 255,
+                warmWhite: 0,
+                coldWhite: 0,
+            },
+            transitionDurationMS: 5000,
+            durationAtTargetMS: 0,
+            interpolationType: InterpolationType.EASE_IN_CUBIC,
+            skipChance: 0,
+        },
+    ]
+}
 
+export const thunderStruck: IAnimationBlueprint = {
+    name: "thunderStruck",
+    priority: 10,
+    syncSequenceTimings: false,
+    syncSequenceColor: false,
+    lightOffsetDurationMS: 0,
+    animationSequences: [
+        {
+            startColor: {
+                red: 0,
+                green: 0,
+                blue: 0,
+                warmWhite: 0,
+                coldWhite: 0,
             },
-            'colorTarget': {
-                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+            targetColor: {
+                red: 0,
+                green: 0,
+                blue: 0,
+                warmWhite: 0,
+                coldWhite: 255,
             },
-            'transitionTimeMS': 50,
-            'durationAtTargetMS': 50,
-            'chancePercent': 100,
+            transitionDurationMS: 0,
+            durationAtTargetMS: 500,
+            interpolationType: InterpolationType.LINEAR,
+            skipChance: 0,
         },
         {
-            'colorStart': {
-                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
-
+            targetColor: {
+                red: 0,
+                green: 0,
+                blue: 0,
+                warmWhite: 0,
+                coldWhite: 0,
             },
-            'colorTarget': {
-                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
-            },
-            'transitionTimeMS': 500,
-            'durationAtTargetMS': [5000, 10000],
-            'chancePercent': 100,
+            transitionDurationMS: 0,
+            durationAtTargetMS: [300, 500],
+            interpolationType: InterpolationType.LINEAR,
+            skipChance: 0,
         },
-    ],
-    'accessoryOffsetMS': 0,
-};
+        {
+            startColor: {
+                red: 0,
+                green: 0,
+                blue: 0,
+                warmWhite: 0,
+                coldWhite: 0,
+            },
+            targetColor: {
+                red: 0,
+                green: 0,
+                blue: 0,
+                warmWhite: 0,
+                coldWhite: 255,
+            },
+            transitionDurationMS: 0,
+            durationAtTargetMS: 500,
+            interpolationType: InterpolationType.LINEAR,
+            skipChance: 70,
+        },
+        {
+            targetColor: {
+                red: 0,
+                green: 0,
+                blue: 0,
+                warmWhite: 0,
+                coldWhite: 0,
+            },
+            transitionDurationMS: 0,
+            durationAtTargetMS: [2000, 50000],
+            interpolationType: InterpolationType.LINEAR,
+            skipChance: 0,
+        },
+   
+    ]
+}
+
+
+
+// export const thunderStruck: IAnimationLoop = {
+
+//     'name': 'ThunderStruck',
+//     'pattern': [
+//         {
+//             'colorStart': {
+//                 RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+//             },
+//             'colorTarget': {
+//                 RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+//             },
+//             'transitionTimeMS': 50,
+//             'durationAtTargetMS': 50,
+//             'chancePercent': 50,
+//         },
+//         {
+//             'colorStart': {
+//                 RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+//             },
+//             'colorTarget': {
+//                 RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+//             },
+//             'transitionTimeMS': 50,
+//             'durationAtTargetMS': 100,
+//             'chancePercent': 100,
+//         },
+//         {
+//             'colorStart': {
+//                 RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+//             },
+//             'colorTarget': {
+//                 RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+//             },
+//             'transitionTimeMS': 50,
+//             'durationAtTargetMS': 50,
+//             'chancePercent': 100,
+//         },
+//         {
+//             'colorStart': {
+//                 RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+//             },
+//             'colorTarget': {
+//                 RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+//             },
+//             'transitionTimeMS': 500,
+//             'durationAtTargetMS': [5000, 10000],
+//             'chancePercent': 100,
+//         },
+//     ],
+//     'accessoryOffsetMS': 0,
+// };
 
 export const hellStruck: IAnimationLoop = {
 
@@ -66,10 +195,10 @@ export const hellStruck: IAnimationLoop = {
 
             },
             'colorTarget': {
-                RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+                RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 255, coldWhite: 0 },
             },
             'transitionTimeMS': 50,
-            'durationAtTargetMS': 50,
+            'durationAtTargetMS': 100,
             'chancePercent': 50,
         },
         {
@@ -90,10 +219,10 @@ export const hellStruck: IAnimationLoop = {
 
             },
             'colorTarget': {
-                RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+                RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 255, coldWhite: 0 },
             },
-            'transitionTimeMS': 50,
-            'durationAtTargetMS': 50,
+            'transitionTimeMS': 1,
+            'durationAtTargetMS': 100,
             'chancePercent': 100,
         },
         {
@@ -105,7 +234,7 @@ export const hellStruck: IAnimationLoop = {
                 RGB: { red: 10, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
             },
             'transitionTimeMS': 500,
-            'durationAtTargetMS': [5000, 10000],
+            'durationAtTargetMS': [1000, 3000],
             'chancePercent': 100,
         },
     ],
@@ -130,6 +259,18 @@ export const colorWave: IAnimationLoop = {
         },
         {
             'colorStart': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+            },
+            'transitionTimeMS': 200,
+            'durationAtTargetMS': 300,
+            'chancePercent': 20,
+        },
+        {
+            'colorStart': {
                 RGB: { red: 127, green: 127, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
 
             },
@@ -142,6 +283,18 @@ export const colorWave: IAnimationLoop = {
         },
         {
             'colorStart': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+            },
+            'transitionTimeMS': 200,
+            'durationAtTargetMS': 300,
+            'chancePercent': 20,
+        },
+        {
+            'colorStart': {
                 RGB: { red: 0, green: 255, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
 
             },
@@ -154,6 +307,18 @@ export const colorWave: IAnimationLoop = {
         },
         {
             'colorStart': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+            },
+            'transitionTimeMS': 200,
+            'durationAtTargetMS': 300,
+            'chancePercent': 20,
+        },
+        {
+            'colorStart': {
                 RGB: { red: 0, green: 127, blue: 127 }, CCT: { warmWhite: 0, coldWhite: 0 },
 
             },
@@ -166,6 +331,18 @@ export const colorWave: IAnimationLoop = {
         },
         {
             'colorStart': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+            },
+            'transitionTimeMS': 200,
+            'durationAtTargetMS': 300,
+            'chancePercent': 20,
+        },
+        {
+            'colorStart': {
                 RGB: { red: 0, green: 0, blue: 255 }, CCT: { warmWhite: 0, coldWhite: 0 },
 
             },
@@ -178,6 +355,18 @@ export const colorWave: IAnimationLoop = {
         },
         {
             'colorStart': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+            },
+            'transitionTimeMS': 200,
+            'durationAtTargetMS': 300,
+            'chancePercent': 20,
+        },
+        {
+            'colorStart': {
                 RGB: { red: 127, green: 0, blue: 127 }, CCT: { warmWhite: 0, coldWhite: 0 },
 
             },
@@ -187,6 +376,18 @@ export const colorWave: IAnimationLoop = {
             'transitionTimeMS': 1000,
             'durationAtTargetMS': 0,
             'chancePercent': 100,
+        },
+        {
+            'colorStart': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
+
+            },
+            'colorTarget': {
+                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
+            },
+            'transitionTimeMS': 200,
+            'durationAtTargetMS': 300,
+            'chancePercent': 20,
         },
     ],
     'accessoryOffsetMS': 1000,

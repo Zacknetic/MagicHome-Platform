@@ -1,5 +1,4 @@
 import { IDeviceAPI, IFailedDeviceProps, } from './utils/types';
-import { v1 as UUID } from 'uuid';
 import { discoverDevices, completeDevices, ICommandOptions, ICompleteDevice, IProtoDevice, ICompleteDeviceInfo } from 'magichome-core';
 import { BaseController } from './BaseController';
 import { discoverProtoDevices } from './utils/platformUtils';
@@ -22,8 +21,8 @@ export class ControllerGenerator {
 	 */
 	public async discoverCompleteDevices(): Promise<ICompleteDevice[] | null> {
 		const protoDevices: IProtoDevice[] = await discoverProtoDevices().catch(error => {
-			throw error;
-		});
+			// throw error;
+		}) as IProtoDevice[];
 
 		const completedDevices: ICompleteDevice[] = await completeDevices(protoDevices);
 		return completedDevices;
@@ -49,7 +48,6 @@ export class ControllerGenerator {
 		const devices: BaseController[] = [];
 		for (const completeDevice of completeDevices) {
 			const deviceController: BaseController = new BaseController(completeDevice);
-			deviceController.initializeController();
 			devices.push(deviceController)
 		}
 		return devices;

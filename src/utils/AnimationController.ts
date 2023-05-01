@@ -4,20 +4,11 @@ import { COLOR_MASKS, COMMAND_TYPE, DEFAULT_COMMAND, ICommandOptions, ICompleteD
 import { clamp } from './miscUtils';
 import { overwriteDeep, sleepTimeout } from 'magichome-core/dist/utils/miscUtils';
 import { isCommandEqual } from './platformUtils';
-
-
+const { ANIMATION_FRAME, QUERY_COMMAND } = COMMAND_TYPE;
 
 const { COLOR_COMMAND } = COMMAND_TYPE;
 const INTERVAL_MS = 25; //time period in milliseconds between each command. i.e. An interval_MS of 25 is 1000ms / 25ms/frame = 40frames/s
 
-const DEFAULT_COMMAND_OPTIONS: ICommandOptions = {
-    commandType: COLOR_COMMAND,
-    maxRetries: 0,
-    bufferMS: 100,
-    waitForResponse: false,
-    timeoutMS: 0,
-    // isAnimationFrame: true
-}
 export class AnimationController {
     protected transitionIntervals = [];
     protected transitionTimeouts = [];
@@ -87,7 +78,6 @@ export class AnimationController {
                 if (!colorStart) colorStart = previousState ?? DEFAULT_COMMAND;
                 previousState = colorTarget;
                 const rollDice = Math.random() * 100;
-                // console.log("DEVILS DICE:", rollDice, " YOUR DICE:", chancePercent)
                 if (rollDice > chancePercent) continue;
 
                 await new Promise(async (resolve) => {
@@ -104,7 +94,7 @@ export class AnimationController {
         }
     }
 
-    private async fade(controllers: BaseController[], startCommand: IAnimationCommand, endCommand: IAnimationCommand, duration, interval) {
+    private fade(controllers: BaseController[], startCommand: IAnimationCommand, endCommand: IAnimationCommand, duration, interval) {
 
         return new Promise(async (resolve) => {
             const steps = duration / interval;
@@ -112,27 +102,35 @@ export class AnimationController {
             let u = 0.0000;
 
 
-            const repeat = await setInterval(async () => {
+            const repeat = await setInterval(() => {
                 if (u >= 1.0) {
                     u = 1.0;
-                    this.sendStep(controllers, startCommand, endCommand, u, false).catch(e => { })
+                    this.sendStep(controllers, startCommand, endCommand, u);
                     clearInterval(repeat);
                     resolve(true);
                     return;
                 }
                 u = Math.min(u, 1);
-                this.sendStep(controllers, startCommand, endCommand, u, false).catch(e => { })
+                this.sendStep(controllers, startCommand, endCommand, u);
                 u += step_u;
             }, interval);
             this.transitionIntervals.push(repeat)
         })
     };
 
-    async sendStep(controllers: BaseController[], startCommand: IAnimationCommand, endCommand: IAnimationCommand, u, waitForResponse) {
+    sendStep(controllers: BaseController[], startCommand: IAnimationCommand, endCommand: IAnimationCommand, u) {
         let deviceCommand: IDeviceCommand = recursiveLerp(startCommand, endCommand, u);
         const finalCommand = overwriteDeep(deviceCommand, { isOn: true })
         for (const controller of controllers) {
-            await controller.setAllValues(finalCommand, { waitForResponse, commandType: null, colorAssist: true, timeoutMS: 500, maxRetries: 5 });
+            try {
+                controller.setAllValues(finalCommand, { waitForResponse: false, commandType: ANIMATION_FRAME, colorAssist: true, timeoutMS: 50, maxRetries: 0 }).catch
+                    (error => {
+                        console.log("sendStep error:", error)
+                    })
+                // controller.setAllValues(finalCommand, { waitForResponse, commandType: ANIMATION_FRAME, colorAssist: true, timeoutMS: 50, maxRetries: 0 })   ;
+            } catch (error) {
+                console.log("sendStep error:", error)
+            }
         }
     }
 

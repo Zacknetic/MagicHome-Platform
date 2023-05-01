@@ -1,4 +1,5 @@
 import { IProtoDevice, IDeviceState, IDeviceMetaData } from 'magichome-core';
+export { COMMAND_TYPE } from 'magichome-core'
 /*----------------------[Constants]----------------------*/
 
 
