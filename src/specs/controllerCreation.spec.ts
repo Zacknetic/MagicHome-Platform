@@ -1,5 +1,5 @@
 import { ControllerGenerator } from '../ControllerGenerator';
-import { cctColorWave, cctRgbTest, cctWave, colorTest, colorWave, fireworks, hellStruck, thunderStruck } from '../utils/animationLibrary'
+import { cctColorWave, cctRgbTest, cctWave, colorTest, colorWave, fireworks, hellStruck, thunderStruck } from '../animation/animationLibrary'
 const deviceList = [];
 import ChatGPTAnimation from '../utils/chatGPTAnimation';
 // import { DeviceInterface } from '../DeviceInterface'
@@ -8,7 +8,6 @@ import ChatGPTAnimation from '../utils/chatGPTAnimation';
 import { BaseController } from '../BaseController';
 import { COMMAND_TYPE, ICommandOptions, IDeviceCommand } from 'magichome-core';
 import { IAnimationLoop } from '../utils/types';
-import { AnimationController } from '../utils/AnimationController';
 import { sleepTimeout } from 'magichome-core/dist/utils/miscUtils';
 import { Console } from 'console';
 
@@ -18,7 +17,6 @@ const controllerGenerator = new ControllerGenerator();
 
 let completedDevices;
 let basecontrollers;
-let animationController: AnimationController;
 
 describe('Test the scan function for DeviceDiscovery.ts', function () {
 const chatGPTAnimation = new ChatGPTAnimation();

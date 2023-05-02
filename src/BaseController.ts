@@ -1,7 +1,7 @@
 import { IProtoDevice, ICompleteDevice, COMMAND_TYPE, ICommandOptions, IDeviceCommand, IDeviceState, IDeviceMetaData, DeviceInterface, COLOR_MASKS, ICompleteResponse, DEFAULT_COMMAND, DEFAULT_COMMAND_OPTIONS, mergeDeep } from 'magichome-core';
 
 import { clamp, waitForMe } from './utils/miscUtils'
-import { IDeviceInformation, IDeviceAPI } from './utils/types';
+import { IDeviceInformation, IDeviceAPI, IAnimationColorStep } from './utils/types';
 import { IAnimationLoop } from '.';
 import { adjustCommandToAPI, getAPI } from './utils/platformUtils';
 import { overwriteDeep } from 'magichome-core/dist/utils/miscUtils';
@@ -23,9 +23,11 @@ export class BaseController {
   protected protoDevice: IProtoDevice;
   protected deviceAPI: IDeviceAPI;
   protected latestUpdateTime: number
+  public manuallyControlled: boolean = false;
+  public id: string;
   first: boolean = true;
   initalized: boolean;
-
+  protected animationList: string[] = [];
   //=================================================
   // Start Constructor //
   constructor(completeDevice: ICompleteDevice) {
@@ -36,6 +38,7 @@ export class BaseController {
     this.latestUpdateTime = completeDevice.completeDeviceInfo.latestUpdate;
     this.deviceState = completeDevice.completeResponse.deviceState;
     this.deviceAPI = getAPI(this.deviceMetaData);
+    this.id = this.protoDevice.uniqueId;
 
   };
   //=================================================
@@ -52,6 +55,42 @@ export class BaseController {
     const deviceCommand: IDeviceCommand = mergeDeep({}, { isOn: value }, DEFAULT_COMMAND)
     const commandOptions = mergeDeep({}, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: POWER_COMMAND }, DEFAULT_COMMAND_OPTIONS)
     this.deviceInterface.sendCommand(deviceCommand, commandOptions).catch(e => { console.log("setOn ERROR: ", e) });
+  }
+
+  public getAnimationList() {
+    return this.animationList;
+  }
+
+  public hasAnimation(animationName: string) {
+    return this.animationList.includes(animationName);
+  }
+
+  public appendAnimationList(animationName: string | string[]) {
+    if (Array.isArray(animationName)) {
+      animationName.forEach((name) => {
+        if (!this.animationList.includes(name)) {
+          this.animationList.push(name);
+        }
+      })
+    } else if (!this.animationList.includes(animationName)) {
+      this.animationList.push(animationName);
+    }
+  }
+
+  public removeAnimationFromList(animationName: string | string[]) {
+    if (Array.isArray(animationName)) {
+      animationName.forEach((name) => {
+        const index = this.animationList.indexOf(name);
+        if (index > -1) {
+          this.animationList.splice(index, 1);
+        }
+      })
+    } else {
+      const index = this.animationList.indexOf(animationName);
+      if (index > -1) {
+        this.animationList.splice(index, 1);
+      }
+    }
   }
 
   // public async setHSV(hue: number, saturation: number, value: number) {
@@ -92,6 +131,23 @@ export class BaseController {
       // console.log("writeCommand ERROR: ", e)
     }
   }
+
+  public setLightColor(color: IAnimationColorStep) {
+    const COLOR = {
+      red: 0,
+      green: 0,
+      blue: 0,
+      warmWhite: 0,
+      coldWhite: 0
+    }
+    for (const colorKey in color) {
+      COLOR[colorKey] = color[colorKey];
+    }
+    const deviceCommand: IDeviceCommand = { isOn: true, RGB: { red: COLOR.red, green: COLOR.green, blue: COLOR.blue }, CCT: { warmWhite: COLOR.warmWhite, coldWhite: COLOR.coldWhite } }
+    const commandOptions: ICommandOptions = { waitForResponse: false, maxRetries: 0, remainingRetries: 0, commandType: COMMAND_TYPE.COLOR_COMMAND, timeoutMS: 50, isEightByteProtocol: this.getCachedDeviceInformation().deviceAPI.isEightByteProtocol, colorAssist: true }
+    // console.log(this.controller.getCachedDeviceInformation().protoDevice.uniqueId);
+    this.setAllValues(deviceCommand, commandOptions);
+  };
 
   private precheckPowerState(deviceCommand: IDeviceCommand, commandOptions: ICommandOptions) {
     if (this.first && this.deviceAPI.needsPowerCommand && !this.deviceState.isOn && deviceCommand.isOn) {

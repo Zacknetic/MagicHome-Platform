@@ -1,6 +1,6 @@
-import { IAnimationLoop } from "./types";
-import { IAnimationBlueprint } from "./chatGPTAnimation";
-import { InterpolationType } from "./miscUtils";
+import { IAnimationLoop } from "../utils/types";
+import { IAnimationBlueprint } from "../utils/chatGPTAnimation";
+import { InterpolationType } from "./animationUtils";
 export const rainbow: IAnimationBlueprint = {
     name: "rainbow",
     priority: 9,
