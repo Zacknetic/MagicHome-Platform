@@ -12,9 +12,11 @@ export class AnimationLoop {
     readonly isSingularAnimationLoop: boolean;
     private currentAnimationOffsetDurationMS: number;
     private activeLoops: Map<AnimationStepKeys, { currentStepIndex: number, animationSteps: IAnimationColorStep[], previousLoopEndStep: IAnimationColorStep; offsetDurationMS: number; }>
+    private STEP_INTERVAL_MS: number;
     associatedLightCount: any;
 
-    constructor(animationBlueprint: IAnimationBlueprint, lightIDs: Array<BaseController['id']>) {
+
+    constructor(animationBlueprint: IAnimationBlueprint, lightIDs: Array<BaseController['id']>, STEP_INTERVAL_MS: number) {
         this.name = animationBlueprint.name;
         this.priority = animationBlueprint.priority;
         this.syncSequenceTimings = animationBlueprint.syncSequenceTimings;
@@ -22,6 +24,7 @@ export class AnimationLoop {
         this.lightOffsetDurationMS = animationBlueprint.lightOffsetDurationMS;
         this.blueprintAnimationSequences = animationBlueprint.animationSequences;
         this.isSingularAnimationLoop = animationBlueprint.syncSequenceTimings && animationBlueprint.syncSequenceColor; //if syncSequenceTimings is false, then the animation loop is singular else test syncSequenceColor to determine if the animation loop is singular
+        this.STEP_INTERVAL_MS = STEP_INTERVAL_MS;
         this.initialize(lightIDs);
     }
 
@@ -84,7 +87,7 @@ export class AnimationLoop {
             if (Math.random() < sequence.skipChance) continue; //skip sequence if lights should be synced and skip chance is met
             const flatSequence = recursiveArrayToInt<IAnimationSequenceStep>(sequence);
             flatSequence.startColor = flatSequence.startColor || previousSequenceEndStep;
-            const steps = calculateSequenceSteps(flatSequence);
+            const steps = calculateSequenceSteps(flatSequence, this.STEP_INTERVAL_MS);
             previousSequenceEndStep = steps[steps.length - 1];
             animationSteps.push(...steps);
         }

@@ -1,6 +1,29 @@
-import { IAnimationLoop } from "../utils/types";
-import { IAnimationBlueprint } from "../utils/chatGPTAnimation";
+import { IAnimationBlueprint, IAnimationLoop } from "../utils/types";
 import { InterpolationType } from "./animationUtils";
+
+export const raining: IAnimationBlueprint = {
+    name: "raining",
+    priority: 9,
+    syncSequenceTimings: false,
+    syncSequenceColor: false,
+    lightOffsetDurationMS: 0,
+    animationSequences: [
+        {
+            targetColor: {
+                red: 0,
+                green: [0, 2],
+                blue: [0, 5],
+                warmWhite: 0,
+                coldWhite: 0,
+            },
+            transitionDurationMS: 1000,
+            durationAtTargetMS: 100,
+            interpolationType: InterpolationType.EASE_IN_SINE,
+            skipChance: 0,
+        },
+    ]
+}
+
 export const rainbow: IAnimationBlueprint = {
     name: "rainbow",
     priority: 9,
@@ -12,6 +35,19 @@ export const rainbow: IAnimationBlueprint = {
             targetColor: {
                 red: 255,
                 green: 0,
+                blue: 0,
+                warmWhite: 0,
+                coldWhite: 0,
+            },
+            transitionDurationMS: 5000,
+            durationAtTargetMS: 0,
+            interpolationType: InterpolationType.EASE_IN_CUBIC,
+            skipChance: 0,
+        },
+        {
+            targetColor: {
+                red: 255,
+                green: 255,
                 blue: 0,
                 warmWhite: 0,
                 coldWhite: 0,
@@ -37,6 +73,19 @@ export const rainbow: IAnimationBlueprint = {
         {
             targetColor: {
                 red: 0,
+                green: 255,
+                blue: 255,
+                warmWhite: 0,
+                coldWhite: 0,
+            },
+            transitionDurationMS: 5000,
+            durationAtTargetMS: 0,
+            interpolationType: InterpolationType.EASE_IN_CUBIC,
+            skipChance: 0,
+        },
+        {
+            targetColor: {
+                red: 0,
                 green: 0,
                 blue: 255,
                 warmWhite: 0,
@@ -47,6 +96,19 @@ export const rainbow: IAnimationBlueprint = {
             interpolationType: InterpolationType.EASE_IN_CUBIC,
             skipChance: 0,
         },
+        {
+            targetColor: {
+                red: 255,
+                green: 0,
+                blue: 255,
+                warmWhite: 0,
+                coldWhite: 0,
+            },
+            transitionDurationMS: 5000,
+            durationAtTargetMS: 0,
+            interpolationType: InterpolationType.EASE_IN_CUBIC,
+            skipChance: 0,
+        }
     ]
 }
 
@@ -70,10 +132,10 @@ export const thunderStruck: IAnimationBlueprint = {
                 green: 0,
                 blue: 0,
                 warmWhite: 0,
-                coldWhite: 255,
+                coldWhite: 100,
             },
             transitionDurationMS: 0,
-            durationAtTargetMS: 500,
+            durationAtTargetMS: 50,
             interpolationType: InterpolationType.LINEAR,
             skipChance: 0,
         },
@@ -85,8 +147,8 @@ export const thunderStruck: IAnimationBlueprint = {
                 warmWhite: 0,
                 coldWhite: 0,
             },
-            transitionDurationMS: 0,
-            durationAtTargetMS: [300, 500],
+            transitionDurationMS: 100,
+            durationAtTargetMS: [100, 150],
             interpolationType: InterpolationType.LINEAR,
             skipChance: 0,
         },
@@ -103,12 +165,12 @@ export const thunderStruck: IAnimationBlueprint = {
                 green: 0,
                 blue: 0,
                 warmWhite: 0,
-                coldWhite: 255,
+                coldWhite: 200,
             },
             transitionDurationMS: 0,
-            durationAtTargetMS: 500,
+            durationAtTargetMS: 300,
             interpolationType: InterpolationType.LINEAR,
-            skipChance: 70,
+            skipChance: 60,
         },
         {
             targetColor: {
@@ -119,11 +181,11 @@ export const thunderStruck: IAnimationBlueprint = {
                 coldWhite: 0,
             },
             transitionDurationMS: 0,
-            durationAtTargetMS: [2000, 50000],
+            durationAtTargetMS: [2000, 40000],
             interpolationType: InterpolationType.LINEAR,
             skipChance: 0,
         },
-   
+
     ]
 }
 

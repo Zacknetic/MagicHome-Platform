@@ -1,6 +1,5 @@
 import { IAnimationColorStep, IAnimationSequenceStep } from "..";
 
-const STEP_INTERVAL_MS = 50;
 
 export function interpolate(start: number, end: number, current: number, total: number, type: InterpolationType) {
     if (type === InterpolationType.LINEAR) {
@@ -185,7 +184,7 @@ export function interpolate(start: number, end: number, current: number, total: 
     return objTarget as Type;
   }
   
-  export function calculateSequenceSteps(sequence: IAnimationSequenceStep): IAnimationColorStep[] {
+  export function calculateSequenceSteps(sequence: IAnimationSequenceStep, STEP_INTERVAL_MS: number): IAnimationColorStep[] {
   
     const animationSteps: IAnimationColorStep[] = [];
     const transitionFrames = sequence.transitionDurationMS / STEP_INTERVAL_MS;

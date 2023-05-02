@@ -1,5 +1,4 @@
 export * from './utils/types';
-export { AnimationController } from './utils/animationController';
 export *  from './animation/animationLibrary';
 export { mergeDeep, overwriteDeep, COMMAND_TYPE } from 'magichome-core'
 export { ControllerGenerator } from './ControllerGenerator';
