@@ -1,17 +1,17 @@
-import * as types from './types';
-import { v1 as UUID } from 'uuid';
-import { scan } from 'magichome-core';
-import { BaseController } from './DeviceControllers/BaseController';
+import { IDeviceAPI, IFailedDeviceProps, } from './utils/types';
+import { discoverDevices, completeDevices, ICommandOptions, ICompleteDevice, IProtoDevice, ICompleteDeviceInfo } from 'magichome-core';
+import { BaseController } from './BaseController';
+import { discoverProtoDevices } from './utils/platformUtils';
+import { completeCustomDevices } from 'magichome-core/dist/DeviceDiscovery';
 
 /**
  * 
  */
 export class ControllerGenerator {
-
-	constructor(
-		public activeDevices: Map<string, BaseController> = new Map(),
-		public inactiveDeviceQueue: types.IFailedDeviceProps[] = [],
-	) { }
+	public activeControllers: BaseController[] = [];
+	public customControllers: BaseController[] = [];
+	// public inactiveDeviceQueue: IFailedDeviceProps[] = [];
+	constructor() { }
 
 	/**
 	 * class function discoverControllers
@@ -19,122 +19,55 @@ export class ControllerGenerator {
 	 * Scan the network for compatible MagicHome devices,
 	 * @returns a map of <uniqueId, ControllerObject> pairs.
 	 */
-	public async discoverControllers(): Promise<Map<string, BaseController>> {
-		return new Promise<Map<string, BaseController> | null>(async (resolve, reject) => {
-			const controllers: Map<string, BaseController> = new Map();
-			const discoveredDevices: types.IProtoDevice[] = await this.discoverDevices().catch(error => {
-				console.log(error)
-				return [];
-			});
-			Promise.all(
-				discoveredDevices.map(async (discoveredDevice) => {
+	public async discoverCompleteDevices(): Promise<ICompleteDevice[] | null> {
+		const protoDevices: IProtoDevice[] = await discoverProtoDevices().catch(error => {
+			// throw error;
+		}) as IProtoDevice[];
 
-					const controller = await this.instantiateController(discoveredDevice);
-					controllers.set(discoveredDevice.uniqueId, controller)
-					return controller;
-				})
-			).finally(() => {
-				resolve(controllers)
-			})
-		})
+		const completedDevices: ICompleteDevice[] = await completeDevices(protoDevices);
+		return completedDevices;
 	}
 
-	private async discoverDevices(): Promise<types.IProtoDevice[] | null> {
-		return new Promise(async (resolve, reject) => {
-			let discoveredDevices: types.IProtoDevice[] = await scan(2000);
-			for (let scans = 0; scans < 5; scans++) {
+	public generateControllers(completeDevices: ICompleteDevice[]): BaseController[] {
 
-				if (discoveredDevices.length > 0) break;
-				discoveredDevices = await scan(2000);
-			}
-
-			if (discoveredDevices.length > 0) {
-				resolve(discoveredDevices);
-			} else {
-				reject('No devices found')
-			}
-		});
+		const activeControllers: BaseController[] = this.iterateDevices(completeDevices);
+		this.activeControllers = activeControllers;
+		return activeControllers;
 	}
 
-	/**
-	 * class function createCustomControllers
-	 * 
-	 * Creates compatible MagicHome controllers from a custom parameters
-	 * Stores controllers as a map of <uniqueId, BaseController> pairs
-	 * 
-	 * @param customCompleteDevices array of objects containign setup data
-	 * @param customCompleteDevice single object containing setup data
-	 * 
-	 * @returns a map of <uniqueId, BaseController> pairs or a single BaseController
-	 */
-	public async createCustomControllers(customCompleteDevices: types.ICustomCompleteDeviceProps[] | types.ICustomCompleteDeviceProps): Promise<BaseController | Map<string, BaseController>> {
+	public generateCustomControllers(ICompleteDevicesInfo: ICompleteDeviceInfo[]): BaseController[] {
 
-		return new Promise<BaseController | Map<string, BaseController> | null>(async (resolve) => {
+		const completeDevices: ICompleteDevice[] = completeCustomDevices(ICompleteDevicesInfo);
+		const customControllers: BaseController[] = this.iterateDevices(completeDevices);
+		this.customControllers = customControllers;
 
-			if (customCompleteDevices instanceof Array) {
-				const customControllersMap = new Map();
-				Promise.all(customCompleteDevices.map(async (customCompleteDevice) => {
-					const customController = await this.createCustomController(customCompleteDevice);
-					customControllersMap.set(customController.getCachedDeviceInformation().protoDevice.uniqueId, customController)
-				})
-				).finally(() => {
-					resolve(customControllersMap)
-				})
-
-			} else {
-				const customController = await this.createCustomController(customCompleteDevices);
-				resolve(customController);
-			}
-		})
-
+		return customControllers;
 	}
 
-	private async createCustomController(customCompleteDevice: types.ICustomCompleteDeviceProps) {
-
-		const { protoDevice, deviceAPI, deviceState } = customCompleteDevice;
-		const _protoDevice = Object.assign({ uniqueId: UUID(), modelNumber: 'unknown' }, protoDevice);
-
-		const customController = await this.generateNewDevice(_protoDevice, deviceAPI, deviceState);
-		this.activeDevices[protoDevice.uniqueId] = customController;
-		return customController;
-	}
-
-	private async instantiateController(protoDevice: types.IProtoDevice) {
-		let newController: BaseController;
-		if (!this.activeDevices[protoDevice.uniqueId]) {
-
-			newController = await this.generateNewDevice(protoDevice);
-			this.activeDevices[protoDevice.uniqueId] = newController;
-			return newController;
-		} else {
-			this.activeDevices[protoDevice.uniqueId].ipAddress = protoDevice.ipAddress;
+	private iterateDevices(completeDevices: ICompleteDevice[]): BaseController[] {
+		const devices: BaseController[] = [];
+		for (const completeDevice of completeDevices) {
+			const deviceController: BaseController = new BaseController(completeDevice);
+			devices.push(deviceController)
 		}
-
+		return devices;
 	}
 
-	private async generateNewDevice(protoDevice: types.IProtoDevice, deviceAPI: types.IDeviceAPI = null, deviceState: types.IDeviceState = null): Promise<BaseController | null> {
-		return new Promise(async (resolve) => {
-			const deviceController = new BaseController(protoDevice);
-			await deviceController.initializeController(deviceAPI, deviceState);
-			resolve(deviceController);
-		});
-	}
-
-	/**
-	 * class function getActiveDevices
-	 * 
-	 * Returns a map of <uniqueId, BaseController> pairs or;
-	 * If provided a valid uniqueId, returns a single BaseController
-	 * @param uniqueId (optional)
-	 * @returns 
-	 */
-	public getActiveDevices(uniqueId?: string): Map<string, BaseController> | BaseController {
-		if (uniqueId) {
-			return this.activeDevices[uniqueId];
-		} else {
-			return this.activeDevices;
-		}
-	}
+	// /**
+	//  * class function getActiveDevices
+	//  * 
+	//  * Returns a map of <uniqueId, BaseController> pairs or;
+	//  * If provided a valid uniqueId, returns a single BaseController
+	//  * @param uniqueId (optional)
+	//  * @returns 
+	//  */
+	// public getActiveDevice(uniqueId?: string): Map<string, BaseController> | BaseController {
+	// 	if (uniqueId) {
+	// 		return this.activeDevices[uniqueId];
+	// 	} else {
+	// 		return this.activeDevices;
+	// 	}
+	// }
 
 	/** TODO
 	 * change this to a base controller function
@@ -147,12 +80,13 @@ export class ControllerGenerator {
 	 * @param commandOptions (optional)
 	 */
 
-	public async sendDirectCommand(directCommand: types.DirectCommand, commandOptions?: types.ICommandOptions) {
+	// public async sendDirectCommand(directCommand: DirectCommand, commandOptions?: ICommandOptions) {
 
-		const customCompleteDevice: types.ICustomCompleteDeviceProps = { protoDevice: directCommand }
-		const controller = this.createCustomControllers([customCompleteDevice])[0];
+	// 	const customCompleteDevice: ICustomCompleteDevice = { protoDevice: directCommand }
+	// 	const controller = this.createCustomControllers([customCompleteDevice])[0];
 
-		controller.activeDevice.setAllValues(directCommand, commandOptions);
-	}
+	// 	controller.activeDevice.setAllValues(directCommand, commandOptions);
+	// }
 
 }
+

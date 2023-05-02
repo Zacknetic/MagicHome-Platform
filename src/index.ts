@@ -1,63 +1,7 @@
-import { IAnimationLoop } from './types';
-import { Animations } from './utils/Animations';
-
+export * from './utils/types';
+export { AnimationController } from './utils/animationController';
+export *  from './animation/animationLibrary';
+export { mergeDeep, overwriteDeep, COMMAND_TYPE } from 'magichome-core'
 export { ControllerGenerator } from './ControllerGenerator';
-export { BaseController } from './DeviceControllers/BaseController'
-export {
-    ICustomProtoDevice,
-    ICustomCompleteDeviceProps as CustomCompleteDeviceProps,
-    DirectCommand,
-    ICommandOptions,
-    IDeviceAPI,
-    IProtoDevice,
-    IDeviceState,
-    DeviceWriteStatus,
-    IDeviceCommand,
-    IAnimationCommand,
-    IAnimationFrame,
-    IAnimationLoop
-} from './types'
-
-
-const thunderstruck: IAnimationLoop = {
-
-    'name': 'ThunderStruck',
-    'pattern': [
-        {
-            'colorStart': {
-                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
-
-            },
-            'colorTarget': {
-                RGB: { red: 0, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 255 },
-            },
-            'transitionTimeMS': [2000, 3000],
-            'durationAtTargetMS': 100,
-            'chancePercent': 10,
-        },
-        {
-            'colorStart': {
-                RGB: { red: 0, green: 255, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
-
-            },
-            'colorTarget': {
-                RGB: { red: 255, green: 0, blue: 0 }, CCT: { warmWhite: 0, coldWhite: 0 },
-            },
-            'transitionTimeMS': [2000, 3000],
-            'durationAtTargetMS': 100,
-            'chancePercent': 100,
-        },
-    ],
-    'accessories': [
-        'Office Light',
-    ],
-    'accessoryOffsetMS': 0,
-};
-
-// let animations = new Animations();
-
-// async function runAnimation() {
-//     animations.animateIndividual(null, thunderstruck)
-// }
-
-// runAnimation()
+export { BaseController } from './BaseController'
+export * from 'magichome-core';
