@@ -19,7 +19,7 @@ export const DefaultDevice = {
  * DeviceAPI
  */
 export interface IDeviceAPI {
-    byteOrder: any;
+    byteOrder: string[];
     description: string;
     hasColor: boolean;
     hasCCT: boolean;
@@ -40,6 +40,18 @@ export interface IControllerInformation {
     displayName: string;
     lastSeenDate: number;
 }
+
+export interface IColorHSV {
+	hue: number;
+	saturation: number;
+	value: number;
+}
+
+export interface IColorTB {
+	temperature: number;
+	brightness: number;
+}
+
 
 export interface IAnimationLoop {
     name: string,

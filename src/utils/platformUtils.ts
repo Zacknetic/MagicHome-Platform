@@ -23,8 +23,6 @@ export async function discoverProtoDevices(): Promise<IProtoDevice[] | null> {
 
 export function getAPI(deviceMetaData: IDeviceMetaData) {
   const { controllerFirmwareVersion, controllerHardwareVersion } = deviceMetaData;
-    console.log("getAPI", controllerHardwareVersion, controllerFirmwareVersion)
-//   let adjustedProtocols;
   if (deviceTypesMap.has(controllerHardwareVersion)) {
     let deviceAPI: IDeviceAPI = deviceTypesMap.get(controllerHardwareVersion);
     // console.log("deviceAPI", deviceAPI)
@@ -35,7 +33,6 @@ export function getAPI(deviceMetaData: IDeviceMetaData) {
     const currAPI = mergeDeep({}, deviceAPI, { needsPowerCommand: true });
 
     // console.log(controllerFirmwareVersion, deviceAPI)
-    console.log("currAPI", currAPI)
     return currAPI;
   } else {
     throw new Error("no matching API! WEIRD!");
@@ -47,7 +44,6 @@ export function adjustCommandToAPI(deviceCommand: IDeviceCommand, commandOptions
   if (!hasColor || !commandOptions.colorAssist) {
     return deviceCommand;
   }
-  console.log(byteOrder)
   const newDeviceCommand: IDeviceCommand = mergeDeep({}, deviceCommand);
 
   isOn(newDeviceCommand);
@@ -101,7 +97,6 @@ function setRGBOrder(newDeviceCommand: IDeviceCommand, byteOrder: Array<string>)
 }
 
 function adjustCCT(newDeviceCommand: IDeviceCommand, deviceAPI: IDeviceAPI) {
-  console.log("adjustCCT");
   const { byteOrder, simultaneousCCT, hasBrightness, hasCCT, hasColor }: IDeviceAPI = deviceAPI;
   const {
     RGB: { red, green, blue },
@@ -118,23 +113,19 @@ function adjustCCT(newDeviceCommand: IDeviceCommand, deviceAPI: IDeviceAPI) {
 
   // handle simultaneousCCT white 4 colors
   if (byteOrder.length == 4 && simultaneousCCT && coldWhite > 0) {
-      console.log("simultaneousCCT white 4 colors")
-      overwriteDeep(newDeviceCommand, { RGB: { red: clamp(red + cwAdj, 0, 255), green: clamp(green + cwAdj, 0, 255), blue: clamp(blue + cwAdj, 0, 255) }, CCT: { warmWhite: Math.max(coldWhite, warmWhite) }, colorMask: COLOR_MASKS.BOTH });
+    mergeDeep(newDeviceCommand, { RGB: { red: clamp(red + cwAdj, 0, 255), green: clamp(green + cwAdj, 0, 255), blue: clamp(blue + cwAdj, 0, 255) }, CCT: { warmWhite: Math.max(coldWhite, warmWhite) }, colorMask: COLOR_MASKS.BOTH });
       return;
   }
 
   //handle non simultaneousCCT white 4 colors
   if (byteOrder.length == 4 && !simultaneousCCT && colorMask == COLOR_MASKS.WHITE) {
-      console.log("non simultaneousCCT white 4 colors")
-      overwriteDeep(newDeviceCommand, { CCT: { warmWhite: Math.max(warmWhite, coldWhite) } });
-      console.log("newDeviceCommand: ", newDeviceCommand)
+    mergeDeep(newDeviceCommand, { CCT: { warmWhite: Math.max(warmWhite, coldWhite) } });
       return;
   }
 
   //handle non simultaneousCCT both 4 colors
   if (!simultaneousCCT && byteOrder.length == 4) {
-    console.log("non simultaneousCCT both 4 colors");
-    overwriteDeep(newDeviceCommand, { RGB: { red: clamp(red + cwAdj + wwRedAdj, 0, 255), green: clamp(green + cwAdj + wwGreenAdj, 0, 255), blue: clamp(blue + cwAdj + wwBlueAdj, 0, 255) } });
+    mergeDeep(newDeviceCommand, { RGB: { red: clamp(red + cwAdj + wwRedAdj, 0, 255), green: clamp(green + cwAdj + wwGreenAdj, 0, 255), blue: clamp(blue + cwAdj + wwBlueAdj, 0, 255) } });
     if (colorMask == COLOR_MASKS.BOTH) newDeviceCommand.colorMask = COLOR_MASKS.COLOR;
   }
 

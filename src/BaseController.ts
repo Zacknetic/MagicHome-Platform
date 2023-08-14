@@ -108,34 +108,38 @@ export class BaseController {
     }
   }
 
-//   public async setHSV(hue: number, saturation: number, value: number) {
-//     mergeDeep(this.lastOutboundState, { hue, saturation, value })
-//     try {
-//       await this.fetchStateRGB(500);
-//     } catch (e) {
-//       console.log("setHSV ERROR: ", e);
-//     }
+  //   public async setHSV(hue: number, saturation: number, value: number) {
+  //     mergeDeep(this.lastOutboundState, { hue, saturation, value })
+  //     try {
+  //       await this.fetchStateRGB(500);
+  //     } catch (e) {
+  //       console.log("setHSV ERROR: ", e);
+  //     }
 
-//     const deviceCommand: IDeviceCommand = mergeDeep({}, DEFAULT_COMMAND, { hue, saturation, value })
-//     const commandOptions = mergeDeep({}, DEFAULT_COMMAND_OPTIONS, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: COLOR_COMMAND })
-//     this.deviceInterface.sendCommand(deviceCommand, commandOptions).catch(e => { console.log("setHSV ERROR: ", e) });
-//   }
+  //     const deviceCommand: IDeviceCommand = mergeDeep({}, DEFAULT_COMMAND, { hue, saturation, value })
+  //     const commandOptions = mergeDeep({}, DEFAULT_COMMAND_OPTIONS, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: COLOR_COMMAND })
+  //     this.deviceInterface.sendCommand(deviceCommand, commandOptions).catch(e => { console.log("setHSV ERROR: ", e) });
+  //   }
 
   public async setAllValues(deviceCommand: IDeviceCommand, commandOptions?: ICommandOptions) {
     mergeDeep(this.lastOutboundState, deviceCommand);
-    const allValueCommandOptions = mergeDeep({}, DEFAULT_COMMAND_OPTIONS, {
-      colorAssist: true,
-      isEightByteProtocol: this.deviceAPI.isEightByteProtocol,
-      timeoutMS: 50,
-      bufferMS: 50,
-      commandType: COLOR_COMMAND,
-      maxRetries: 5,
-    }, commandOptions);
+    const allValueCommandOptions = mergeDeep(
+      {},
+      DEFAULT_COMMAND_OPTIONS,
+      {
+        colorAssist: true,
+        isEightByteProtocol: this.deviceAPI.isEightByteProtocol,
+        timeoutMS: 50,
+        bufferMS: 50,
+        commandType: COLOR_COMMAND,
+        maxRetries: 5,
+      },
+      commandOptions
+    );
     try {
-      // console.log("setAllValues: ", deviceCommand, commandOptions)
       return await this.writeCommand(deviceCommand, allValueCommandOptions);
     } catch (e) {
-      console.log("setAllValues ERROR: ", e);
+      throw e;
     }
   }
 
@@ -148,7 +152,7 @@ export class BaseController {
       const { deviceState } = (await this.deviceInterface.sendCommand(newDeviceCommand, commandOptions)) as ICompleteResponse;
       return deviceState;
     } catch (e) {
-      // console.log("writeCommand ERROR: ", e)
+      throw e;
     }
   }
 
@@ -182,8 +186,7 @@ export class BaseController {
         .sendCommand({ isOn: true, RGB: null, CCT: null }, { commandType: POWER_COMMAND, waitForResponse: false, maxRetries: 0, timeoutMS: 50 })
         .then((res) => res)
         .catch((e) => {
-          // throw e
-          console.log("precheckPowerState Error: ", e);
+          throw e;
         });
       this.first = false;
       this.overwriteLocalState({ isOn: true } as IDeviceState);
@@ -197,13 +200,12 @@ export class BaseController {
       try {
         completeResponse = await this.deviceInterface.queryState(timeout);
         const byteOrder = this.deviceAPI.byteOrder;
-        if (((byteOrder[0] == "g"), (byteOrder[1] == "r"), (byteOrder[2] == "b"))) {
+        if (byteOrder[0] == "g" && byteOrder[1] == "r" && byteOrder[2] == "b") {
           const { red, green, blue } = completeResponse.deviceState.RGB;
           completeResponse.deviceState.RGB = { red: green, green: red, blue };
         }
-
       } catch (e) {
-        // console.log("fetchState ERROR: ", e)
+        throw e;
       }
       scans++;
     } while (completeResponse?.deviceState == null && scans < 5);
@@ -233,7 +235,7 @@ export class BaseController {
       mergeDeep(this.deviceState, deviceState);
       mergeDeep(this.lastOutboundState, deviceState);
     } catch (error) {
-      console.log("MH PLATFORM ERROR: ", error);
+      throw error;
     }
   }
 
