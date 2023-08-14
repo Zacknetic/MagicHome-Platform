@@ -88,7 +88,7 @@ export const deviceTypesMap: Map<number, IDeviceAPI> = new Map([
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
-      isEightByteProtocol: null,
+      isEightByteProtocol: true,
       needsPowerCommand: null,
     },
   ],

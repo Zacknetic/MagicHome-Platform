@@ -1,11 +1,24 @@
-import { IProtoDevice, ICompleteDevice, COMMAND_TYPE, ICommandOptions, IDeviceCommand, IDeviceState, IDeviceMetaData, DeviceInterface, COLOR_MASKS, ICompleteResponse, DEFAULT_COMMAND, DEFAULT_COMMAND_OPTIONS, mergeDeep } from 'magichome-core';
+import {
+  IProtoDevice,
+  ICompleteDevice,
+  COMMAND_TYPE,
+  ICommandOptions,
+  IDeviceCommand,
+  IDeviceState,
+  IDeviceMetaData,
+  DeviceInterface,
+  COLOR_MASKS,
+  ICompleteResponse,
+  DEFAULT_COMMAND,
+  DEFAULT_COMMAND_OPTIONS,
+  mergeDeep,
+} from "magichome-core";
 
-import { clamp, waitForMe } from './utils/miscUtils'
-import { IDeviceInformation, IDeviceAPI, IAnimationColorStep } from './utils/types';
-import { IAnimationLoop } from '.';
-import { adjustCommandToAPI, getAPI } from './utils/platformUtils';
-import { overwriteDeep } from 'magichome-core/dist/utils/miscUtils';
-
+import { clamp, waitForMe } from "./utils/miscUtils";
+import { IDeviceInformation, IDeviceAPI, IAnimationColorStep } from "./utils/types";
+import { IAnimationLoop } from ".";
+import { adjustCommandToAPI, getAPI } from "./utils/platformUtils";
+import { overwriteDeep } from "magichome-core/dist/utils/miscUtils";
 
 const { WHITE, COLOR, BOTH } = COLOR_MASKS;
 const { POWER_COMMAND, COLOR_COMMAND, ANIMATION_FRAME, QUERY_COMMAND } = COMMAND_TYPE;
@@ -22,7 +35,7 @@ export class BaseController {
   protected deviceMetaData: IDeviceMetaData;
   protected protoDevice: IProtoDevice;
   protected deviceAPI: IDeviceAPI;
-  protected latestUpdateTime: number
+  protected latestUpdateTime: number;
   public manuallyControlled: boolean = false;
   public id: string;
   first: boolean = true;
@@ -39,22 +52,24 @@ export class BaseController {
     this.deviceState = completeDevice.completeResponse.deviceState;
     this.deviceAPI = getAPI(this.deviceMetaData);
     this.id = this.protoDevice.uniqueId;
-
-  };
+    this.lastOutboundState = mergeDeep({}, this.deviceState);
+  }
   //=================================================
   // End Constructor //
   public async setOn(value: boolean) {
-    mergeDeep(this.lastOutboundState, { isOn: value })
+    mergeDeep(this.lastOutboundState, { isOn: value });
     try {
       await this.fetchStateRGB(500);
-    } catch (e) {
-      console.log("setOn ERROR: ", e);
-    }
 
-    if (value === this.deviceState.isOn) return;
-    const deviceCommand: IDeviceCommand = mergeDeep({}, { isOn: value }, DEFAULT_COMMAND)
-    const commandOptions = mergeDeep({}, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: POWER_COMMAND }, DEFAULT_COMMAND_OPTIONS)
-    this.deviceInterface.sendCommand(deviceCommand, commandOptions).catch(e => { console.log("setOn ERROR: ", e) });
+      if (value === false && this.deviceState.isOn === false) return;
+      const deviceCommand: IDeviceCommand = mergeDeep({}, DEFAULT_COMMAND, { isOn: value });
+      const commandOptions = mergeDeep({}, DEFAULT_COMMAND_OPTIONS, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: POWER_COMMAND });
+      this.deviceInterface.sendCommand(deviceCommand, commandOptions).catch((e) => {
+        //   console.log("setOn ERROR: ", e);
+      });
+    } catch (e) {
+      //   console.log("setOn ERROR: ", e);
+    }
   }
 
   public getAnimationList() {
@@ -71,7 +86,7 @@ export class BaseController {
         if (!this.animationList.includes(name)) {
           this.animationList.push(name);
         }
-      })
+      });
     } else if (!this.animationList.includes(animationName)) {
       this.animationList.push(animationName);
     }
@@ -84,7 +99,7 @@ export class BaseController {
         if (index > -1) {
           this.animationList.splice(index, 1);
         }
-      })
+      });
     } else {
       const index = this.animationList.indexOf(animationName);
       if (index > -1) {
@@ -93,41 +108,46 @@ export class BaseController {
     }
   }
 
-  // public async setHSV(hue: number, saturation: number, value: number) {
-  //   mergeDeep(this.lastOutboundState, { hue, saturation, value })
-  //   try {
-  //     await this.fetchStateRGB(500);
-  //   } catch (e) {
-  //     console.log("setHSV ERROR: ", e);
-  //   }
+//   public async setHSV(hue: number, saturation: number, value: number) {
+//     mergeDeep(this.lastOutboundState, { hue, saturation, value })
+//     try {
+//       await this.fetchStateRGB(500);
+//     } catch (e) {
+//       console.log("setHSV ERROR: ", e);
+//     }
 
-  //   const deviceCommand: IDeviceCommand = mergeDeep({}, { hue, saturation, value }, DEFAULT_COMMAND)
-  //   const commandOptions = mergeDeep({}, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: COLOR_COMMAND }, DEFAULT_COMMAND_OPTIONS)
-  //   this.deviceInterface.sendCommand(deviceCommand, commandOptions).catch(e => { console.log("setHSV ERROR: ", e) });
-  // }
-
+//     const deviceCommand: IDeviceCommand = mergeDeep({}, DEFAULT_COMMAND, { hue, saturation, value })
+//     const commandOptions = mergeDeep({}, DEFAULT_COMMAND_OPTIONS, { isEightByteProtocol: this.deviceAPI.isEightByteProtocol, commandType: COLOR_COMMAND })
+//     this.deviceInterface.sendCommand(deviceCommand, commandOptions).catch(e => { console.log("setHSV ERROR: ", e) });
+//   }
 
   public async setAllValues(deviceCommand: IDeviceCommand, commandOptions?: ICommandOptions) {
     mergeDeep(this.lastOutboundState, deviceCommand);
-    commandOptions = mergeDeep({}, commandOptions, { colorAssist: true, isEightByteProtocol: this.deviceAPI.isEightByteProtocol, timeoutMS: 50, bufferMS: 50, commandType: COLOR_COMMAND, maxRetries: 0 })
-    mergeDeep(commandOptions, DEFAULT_COMMAND_OPTIONS)
+    const allValueCommandOptions = mergeDeep({}, DEFAULT_COMMAND_OPTIONS, {
+      colorAssist: true,
+      isEightByteProtocol: this.deviceAPI.isEightByteProtocol,
+      timeoutMS: 50,
+      bufferMS: 50,
+      commandType: COLOR_COMMAND,
+      maxRetries: 5,
+    }, commandOptions);
     try {
-      return await this.writeCommand(deviceCommand, commandOptions);
-    }
-    catch (e) {
-      console.log("setAllValues ERROR: ", e)
+      // console.log("setAllValues: ", deviceCommand, commandOptions)
+      return await this.writeCommand(deviceCommand, allValueCommandOptions);
+    } catch (e) {
+      console.log("setAllValues ERROR: ", e);
     }
   }
 
   private async writeCommand(deviceCommand: IDeviceCommand, commandOptions: ICommandOptions) {
     const newDeviceCommand = adjustCommandToAPI(deviceCommand, commandOptions, this.deviceAPI);
+
     // this.precheckPowerState(deviceCommand, commandOptions);
 
     try {
-      const { deviceState } = await this.deviceInterface.sendCommand(newDeviceCommand, commandOptions) as ICompleteResponse;
+      const { deviceState } = (await this.deviceInterface.sendCommand(newDeviceCommand, commandOptions)) as ICompleteResponse;
       return deviceState;
-    }
-    catch (e) {
+    } catch (e) {
       // console.log("writeCommand ERROR: ", e)
     }
   }
@@ -138,40 +158,56 @@ export class BaseController {
       green: 0,
       blue: 0,
       warmWhite: 0,
-      coldWhite: 0
-    }
+      coldWhite: 0,
+    };
     for (const colorKey in color) {
       COLOR[colorKey] = color[colorKey];
     }
-    const deviceCommand: IDeviceCommand = { isOn: true, RGB: { red: COLOR.red, green: COLOR.green, blue: COLOR.blue }, CCT: { warmWhite: COLOR.warmWhite, coldWhite: COLOR.coldWhite } }
-    const commandOptions: ICommandOptions = { waitForResponse: false, maxRetries: 0, remainingRetries: 0, commandType: COMMAND_TYPE.COLOR_COMMAND, timeoutMS: 50, isEightByteProtocol: this.getCachedDeviceInformation().deviceAPI.isEightByteProtocol, colorAssist: true }
-    // console.log(this.controller.getCachedDeviceInformation().protoDevice.uniqueId);
+    const deviceCommand: IDeviceCommand = { isOn: true, RGB: { red: COLOR.red, green: COLOR.green, blue: COLOR.blue }, CCT: { warmWhite: COLOR.warmWhite, coldWhite: COLOR.coldWhite } };
+    const commandOptions: ICommandOptions = {
+      waitForResponse: false,
+      maxRetries: 0,
+      remainingRetries: 0,
+      commandType: COMMAND_TYPE.COLOR_COMMAND,
+      timeoutMS: 50,
+      isEightByteProtocol: this.getCachedDeviceInformation().deviceAPI.isEightByteProtocol,
+      colorAssist: true,
+    };
     this.setAllValues(deviceCommand, commandOptions);
-  };
+  }
 
   private precheckPowerState(deviceCommand: IDeviceCommand, commandOptions: ICommandOptions) {
     if (this.first && this.deviceAPI.needsPowerCommand && !this.deviceState.isOn && deviceCommand.isOn) {
-      this.deviceInterface.sendCommand({ isOn: true, RGB: null, CCT: null }, { commandType: POWER_COMMAND, waitForResponse: false, maxRetries: 0, timeoutMS: 50 }).then(res => res).catch(e => {
-        // throw e
-        console.log("precheckPowerState Error: ", e)
-      });
+      this.deviceInterface
+        .sendCommand({ isOn: true, RGB: null, CCT: null }, { commandType: POWER_COMMAND, waitForResponse: false, maxRetries: 0, timeoutMS: 50 })
+        .then((res) => res)
+        .catch((e) => {
+          // throw e
+          console.log("precheckPowerState Error: ", e);
+        });
       this.first = false;
-      this.overwriteLocalState({ isOn: true } as IDeviceState)
+      this.overwriteLocalState({ isOn: true } as IDeviceState);
     }
   }
 
   public async fetchStateRGB(timeout: number = 500): Promise<IDeviceState> {
-    let scans = 0, completeResponse: ICompleteResponse;
+    let scans = 0,
+      completeResponse: ICompleteResponse;
     do {
       try {
-        completeResponse = await this.deviceInterface.queryState(timeout)
+        completeResponse = await this.deviceInterface.queryState(timeout);
+        const byteOrder = this.deviceAPI.byteOrder;
+        if (((byteOrder[0] == "g"), (byteOrder[1] == "r"), (byteOrder[2] == "b"))) {
+          const { red, green, blue } = completeResponse.deviceState.RGB;
+          completeResponse.deviceState.RGB = { red: green, green: red, blue };
+        }
 
       } catch (e) {
         // console.log("fetchState ERROR: ", e)
       }
       scans++;
-    } while (completeResponse?.deviceState == null && scans < 5)
-    if (typeof completeResponse == 'undefined') throw 'no response given';
+    } while (completeResponse?.deviceState == null && scans < 5);
+    if (typeof completeResponse == "undefined") throw "no response given";
 
     this.overwriteLocalState(completeResponse.deviceState);
     return completeResponse.deviceState;
@@ -193,12 +229,11 @@ export class BaseController {
   // }
 
   private overwriteLocalState(deviceState: IDeviceState): void {
-
     try {
-      overwriteDeep(this.deviceState, deviceState);
-      overwriteDeep(this.lastOutboundState, deviceState);
+      mergeDeep(this.deviceState, deviceState);
+      mergeDeep(this.lastOutboundState, deviceState);
     } catch (error) {
-      console.log("MH PLATFORM ERROR: ", error)
+      console.log("MH PLATFORM ERROR: ", error);
     }
   }
 
@@ -228,4 +263,3 @@ export class BaseController {
     return this.deviceState;
   }
 }
-
