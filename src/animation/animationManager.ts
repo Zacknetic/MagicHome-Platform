@@ -83,7 +83,6 @@ export class AnimationManager {
         }
 
         let animation = this.animationLoops.find(animation => animation.name === animationBlueprint.name);
-        console.log(animation);
         if (!animation) {
             animation = this.generateAnimationLoopFromBlueprint(animationBlueprint);
         }

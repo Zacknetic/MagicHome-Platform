@@ -52,7 +52,6 @@ export function HSVtoRGB(HSV: IColorHSV): IColorRGB {
   S = clamp(S, 0, 100);
   V = clamp(V, 0, 100);
 
-  // console.log("-- SENDING -- H: ", H, "S: ", S, "V: ", V)
   S /= 100.0;
   V /= 100.0;
   const C = V * S;
@@ -70,14 +69,12 @@ export function HSVtoRGB(HSV: IColorHSV): IColorRGB {
   const [dR, dG, dB] = order;
   const [red, green, blue] = [Math.round((dR + m) * 255), Math.round((dG + m) * 255), Math.round((dB + m) * 255)];
 
-  // console.log(`--SENDING-- RED: ${red} GREEN: ${green} BLUE: ${blue}`)
   return { red, green, blue };
 }
 
 export function RGBtoHSV(RGB: IColorRGB): IColorHSV {
   const { red, green, blue }: IColorRGB = RGB;
 
-  // console.log(`--RECEIVING-- RED: ${red} GREEN: ${green} BLUE: ${blue}`)
 
   const [R, G, B] = [red, green, blue];
   const [dR, dG, dB] = [R / 255, G / 255, B / 255];
@@ -99,7 +96,6 @@ export function RGBtoHSV(RGB: IColorRGB): IColorHSV {
 
   S *= 100;
   V *= 100;
-  // console.log("-- RECEIVED -- H: ", H, "S: ", S, "V: ", V)
 
   return { hue: H, saturation: S, value: V };
 }

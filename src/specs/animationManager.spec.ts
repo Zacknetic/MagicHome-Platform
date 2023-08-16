@@ -10,10 +10,12 @@ const controllerGenerator = new ControllerGenerator();
 let onlineDevices;
 
 async function generateControllers() {
-    const completedDevices: ICompleteDevice[] = await controllerGenerator.discoverCompleteDevices().catch(e => { console.log(e) }) as ICompleteDevice[];
+    const completedDevices: ICompleteDevice[] = await controllerGenerator.discoverCompleteDevices() as ICompleteDevice[];
     const basecontrollers = controllerGenerator.generateControllers(completedDevices);
 
-    onlineDevices = basecontrollers.filter((controller: BaseController) => {
+    onlineDevices = basecontrollers.forEach(element => {
+        
+    });((controller: BaseController) => {
         return controller.getCachedDeviceInformation().protoDevice.uniqueId == 'DC4F22CF7C31';
     });
 }

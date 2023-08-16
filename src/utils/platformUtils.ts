@@ -25,14 +25,11 @@ export function getAPI(deviceMetaData: IDeviceMetaData) {
   const { controllerFirmwareVersion, controllerHardwareVersion } = deviceMetaData;
   if (deviceTypesMap.has(controllerHardwareVersion)) {
     let deviceAPI: IDeviceAPI = deviceTypesMap.get(controllerHardwareVersion);
-    // console.log("deviceAPI", deviceAPI)
 
     // if (matchingFirmwareVersions.has(controllerFirmwareVersion)) adjustedProtocols = matchingFirmwareVersions.get(controllerFirmwareVersion);
-    // console.log(controllerFirmwareVersion, adjustedProtocols)
 
     const currAPI = mergeDeep({}, deviceAPI, { needsPowerCommand: true });
 
-    // console.log(controllerFirmwareVersion, deviceAPI)
     return currAPI;
   } else {
     throw new Error("no matching API! WEIRD!");
@@ -119,7 +116,7 @@ function adjustCCT(newDeviceCommand: IDeviceCommand, deviceAPI: IDeviceAPI) {
 
   //handle non simultaneousCCT white 4 colors
   if (byteOrder.length == 4 && !simultaneousCCT && colorMask == COLOR_MASKS.WHITE) {
-    mergeDeep(newDeviceCommand, { CCT: { warmWhite: Math.max(warmWhite, coldWhite) } });
+    mergeDeep(newDeviceCommand, { CCT: { warmWhite: Math.max(warmWhite, coldWhite), coldWhite: 0} });
       return;
   }
 
@@ -148,8 +145,6 @@ function isOn(newDeviceCommand: IDeviceCommand) {
 
 export function isCommandEqual(colorStart: IAnimationCommand, colorTarget: IAnimationCommand): boolean {
   try {
-    // console.log("COMMAND: ", deviceCommand, "\nSTATE: ", deviceState)
-    // console.log(deviceCommand.colorMask, " ", commandOptions.commandType)
     let isEqual = false;
 
     isEqual = deepEqual(colorStart, colorTarget, ["colorMask"]);

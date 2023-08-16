@@ -8,8 +8,8 @@ import { completeCustomDevices } from 'magichome-core/dist/DeviceDiscovery';
  * 
  */
 export class ControllerGenerator {
-	public activeControllers: BaseController[] = [];
-	public customControllers: BaseController[] = [];
+	public activeControllers: Map<string, BaseController>;
+	public customControllers: Map<string, BaseController>;
 	// public inactiveDeviceQueue: IFailedDeviceProps[] = [];
 	constructor() { }
 
@@ -28,29 +28,30 @@ export class ControllerGenerator {
 		return completedDevices;
 	}
 
-	public generateControllers(completeDevices: ICompleteDevice[]): BaseController[] {
+	public generateControllers(completeDevices: ICompleteDevice[]): Map<string, BaseController> {
 
-		const activeControllers: BaseController[] = this.iterateDevices(completeDevices);
+		const activeControllers: Map<string, BaseController> = this.iterateDevices(completeDevices);
 		this.activeControllers = activeControllers;
 		return activeControllers;
 	}
 
-	public generateCustomControllers(ICompleteDevicesInfo: ICompleteDeviceInfo[]): BaseController[] {
+	public generateCustomControllers(ICompleteDevicesInfo: ICompleteDeviceInfo[]): Map<string, BaseController> {
 
 		const completeDevices: ICompleteDevice[] = completeCustomDevices(ICompleteDevicesInfo);
-		const customControllers: BaseController[] = this.iterateDevices(completeDevices);
+		const customControllers:Map<string, BaseController> = this.iterateDevices(completeDevices);
 		this.customControllers = customControllers;
 
 		return customControllers;
 	}
 
-	private iterateDevices(completeDevices: ICompleteDevice[]): BaseController[] {
-		const devices: BaseController[] = [];
+	private iterateDevices(completeDevices: ICompleteDevice[]): Map<string, BaseController> {
+		const baseControllers: Map<string, BaseController> = new Map();
 		for (const completeDevice of completeDevices) {
-			const deviceController: BaseController = new BaseController(completeDevice);
-			devices.push(deviceController)
+			const uniqueId: string = completeDevice.completeDeviceInfo.protoDevice.uniqueId;
+			const baseController: BaseController = new BaseController(completeDevice);
+			baseControllers.set(uniqueId, baseController)
 		}
-		return devices;
+		return baseControllers;
 	}
 
 	// /**
