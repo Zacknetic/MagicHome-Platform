@@ -1,5 +1,5 @@
 import { COLOR_MASKS, DEFAULT_COMMAND, discoverDevices, ICommandOptions, ICompleteDevice, IDeviceCommand, IDeviceMetaData, IProtoDevice } from "magichome-core";
-import { deepEqual, isObject, mergeDeep, overwriteDeep } from "magichome-core/dist/utils/miscUtils";
+import { deepEqual, mergeDeep, overwriteDeep } from "magichome-core/dist/utils/miscUtils";
 import { BaseController } from "..";
 import { deviceTypesMap, matchingFirmwareVersions } from "./deviceTypesMap";
 import { clamp } from "./miscUtils";
@@ -28,7 +28,7 @@ export function getAPI(deviceMetaData: IDeviceMetaData) {
 
     // if (matchingFirmwareVersions.has(controllerFirmwareVersion)) adjustedProtocols = matchingFirmwareVersions.get(controllerFirmwareVersion);
 
-    const currAPI = mergeDeep({}, deviceAPI, { needsPowerCommand: true });
+    const currAPI: IDeviceAPI = mergeDeep<IDeviceAPI>({}, {...deviceAPI,  needsPowerCommand: true });
 
     return currAPI;
   } else {
