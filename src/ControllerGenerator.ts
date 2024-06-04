@@ -1,56 +1,62 @@
-import { IDeviceAPI, IFailedDeviceProps, } from './utils/types';
-import { discoverDevices, completeDevices, ICommandOptions, ICompleteDevice, IProtoDevice, ICompleteDeviceInfo } from 'magichome-core';
+import { DeviceAPI, IFailedDeviceProps, } from './models/types';
 import { BaseController } from './BaseController';
 import { discoverProtoDevices } from './utils/platformUtils';
-import { completeCustomDevices } from 'magichome-core/dist/DeviceDiscovery';
+import { DeviceBundle, InterfaceOptions, ProtoDevice, generateDeviceBundles } from 'magichome-core';
+
 
 /**
  * 
  */
 export class ControllerGenerator {
-	public activeControllers: Map<string, BaseController>;
 	public customControllers: Map<string, BaseController>;
 	// public inactiveDeviceQueue: IFailedDeviceProps[] = [];
+	private interfaceOptions: InterfaceOptions = { timeoutMS: 700 };
 	constructor() { }
 
-	/**
-	 * class function discoverControllers
-	 * 
-	 * Scan the network for compatible MagicHome devices,
-	 * @returns a map of <uniqueId, ControllerObject> pairs.
-	 */
-	public async discoverCompleteDevices(): Promise<ICompleteDevice[] | null> {
-		const protoDevices: IProtoDevice[] = await discoverProtoDevices().catch(error => {
-			// throw error;
-		}) as IProtoDevice[];
 
-		const completedDevices: ICompleteDevice[] = await completeDevices(protoDevices);
-		return completedDevices;
+	set activeControllers(activeControllers: Map<string, BaseController>) {
+		this.activeControllers = activeControllers;
 	}
 
-	public generateControllers(completeDevices: ICompleteDevice[]): Map<string, BaseController> {
+	get activeControllers() {
+		return this.activeControllers;
+	}
 
-		const activeControllers: Map<string, BaseController> = this.iterateDevices(completeDevices);
-		this.activeControllers = activeControllers;
+	public async getDevices(): Promise<Map<string, BaseController>> {
+		const deviceBundles: DeviceBundle[] = await this.discoverDeviceBundles();
+		const activeControllers: Map<string, BaseController> = this.generateControllers(deviceBundles);
 		return activeControllers;
 	}
 
-	public generateCustomControllers(ICompleteDevicesInfo: ICompleteDeviceInfo[]): Map<string, BaseController> {
-
-		const completeDevices: ICompleteDevice[] = completeCustomDevices(ICompleteDevicesInfo);
-		const customControllers:Map<string, BaseController> = this.iterateDevices(completeDevices);
-		this.customControllers = customControllers;
-
-		return customControllers;
+	public async discoverDeviceBundles(): Promise<DeviceBundle[]> {
+		const protoDevices: ProtoDevice[] = await discoverProtoDevices();
+		const deviceBundles: DeviceBundle[] = await generateDeviceBundles(protoDevices, this.interfaceOptions);
+		return deviceBundles;
 	}
 
-	private iterateDevices(completeDevices: ICompleteDevice[]): Map<string, BaseController> {
+	private generateControllers(deviceBundles: DeviceBundle[]): Map<string, BaseController> {
+
+		const activeControllers: Map<string, BaseController> = this.iterateDevices(deviceBundles);
+		return activeControllers;
+	}
+
+	// public generateCustomControllers(ICompleteDevicesInfo: ICompleteDeviceInfo[]): Map<string, BaseController> {
+
+	// 	const completeDevices: ICompleteDevice[] = completeCustomDevices(ICompleteDevicesInfo);
+	// 	const customControllers: Map<string, BaseController> = this.iterateDevices(completeDevices);
+	// 	this.customControllers = customControllers;
+
+	// 	return customControllers;
+	// }
+
+	private iterateDevices(deviceBundles: DeviceBundle[]): Map<string, BaseController> {
 		const baseControllers: Map<string, BaseController> = new Map();
-		for (const completeDevice of completeDevices) {
-			const uniqueId: string = completeDevice.completeDeviceInfo.protoDevice.uniqueId;
-			const baseController: BaseController = new BaseController(completeDevice);
+		for (const deviceBundle of deviceBundles) {
+			const uniqueId: string = deviceBundle.completeDevice.protoDevice.uniqueId;
+			const baseController: BaseController = new BaseController(deviceBundle);
 			baseControllers.set(uniqueId, baseController)
 		}
+
 		return baseControllers;
 	}
 

@@ -1,4 +1,4 @@
-import { IAnimationBlueprint, IAnimationLoop } from "../utils/types";
+import { IAnimationBlueprint, IAnimationLoop } from "../models/types";
 import { InterpolationType } from "./animationUtils";
 
 export const raining: IAnimationBlueprint = {

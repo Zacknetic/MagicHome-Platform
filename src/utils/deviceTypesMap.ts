@@ -1,6 +1,6 @@
-import { IDeviceAPI } from './types';
+import { DeviceAPI } from '../models/types';
 
-export const deviceTypesMap: Map<number, IDeviceAPI> = new Map([
+export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
   [
     0x04,
     {

@@ -139,7 +139,7 @@ export class AnimationManager {
 
             const nextAnimation = this.getNextAnimation(light);
             const currentStep = nextAnimation ? nextAnimation.getAnimationStep(light.id) : this.getDefaultStep();
-            light.controller.setLightColor(this.roundStepValues(currentStep));
+            light.controller.setLEDColorAnimation(this.roundStepValues(currentStep));
         });
     }
 

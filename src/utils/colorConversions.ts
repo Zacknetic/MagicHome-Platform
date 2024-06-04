@@ -1,5 +1,5 @@
 import { COLOR_MASKS, IColorCCT, IColorRGB, ICompleteResponse, IDeviceCommand, IDeviceState } from "magichome-core";
-import { IColorHSV, IColorTB } from "./types";
+import { IColorHSV, IColorTB } from "../models/types";
 
 export function convertCCTValueToDualWhite(_cctValue) {
   const cctValue = _cctValue - 140;

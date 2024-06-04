@@ -1,5 +1,4 @@
-import { IProtoDevice, IDeviceState, IDeviceMetaData } from 'magichome-core';
-export { COMMAND_TYPE } from 'magichome-core'
+import { ProtoDevice, DeviceState, DeviceMetaData } from 'magichome-core';
 import { BaseController } from '../BaseController';
 import { InterpolationType } from '../animation/animationUtils';
 
@@ -15,10 +14,20 @@ export const DefaultDevice = {
 
 /*----------------------[Device State]--------- -------------*/
 
+
 /**
- * DeviceAPI
+ * Device API object
+ * @param byteOrder - The order of the bytes in the command
+ * @param description - A description of the device
+ * @param hasColor - Whether the device has color
+ * @param hasCCT - Whether the device has CCT
+ * @param hasBrightness - Whether the device has brightness
+ * @param isEightByteProtocol - Whether the device uses an 8 byte protocol
+ * @param needsPowerCommand - Whether the device needs a power command
+ * @param simultaneousCCT - Whether the device can handle CCT and RGB commands simultaneously
  */
-export interface IDeviceAPI {
+
+export type DeviceAPI = {
     byteOrder: string[];
     description: string;
     hasColor: boolean;
@@ -29,11 +38,11 @@ export interface IDeviceAPI {
     simultaneousCCT: boolean;
 }
 
-export interface IDeviceInformation {
-    deviceAPI: IDeviceAPI;
-    protoDevice: IProtoDevice;
-    deviceState: IDeviceState;
-    deviceMetaData: IDeviceMetaData
+export type FullDeviceInformation = {
+    deviceAPI: DeviceAPI;
+    protoDevice: ProtoDevice;
+    deviceState: DeviceState;
+    deviceMetaData: DeviceMetaData
 }
 
 export interface IControllerInformation {
@@ -116,7 +125,7 @@ export interface IAnimationBlueprint {
     readonly animationSequences: IAnimationSequenceRange[];
 }
 
-export type IFailedDeviceProps = IProtoDevice & {
+export type IFailedDeviceProps = ProtoDevice & {
     latestScanTimestamp: number;
 }
 /*----------------------[Device Commands]----------------------*/
