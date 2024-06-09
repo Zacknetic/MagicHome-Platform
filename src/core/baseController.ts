@@ -1,11 +1,8 @@
 import {
-  ProtoDevice,
-  CompleteDevice,
   CommandType,
   CommandOptions,
   DeviceCommand,
   DeviceState,
-  DeviceMetaData,
   DeviceBundle,
   DeviceManager,
   DEFAULT_COMMAND,
@@ -16,12 +13,11 @@ import {
   FetchStateResponse,
 } from "magichome-core";
 
-import { clamp, waitForMe } from "./utils/miscUtils";
-import { FullDeviceInformation, DeviceAPI, IAnimationColorStep } from "./models/types";
-import { IAnimationLoop } from ".";
-import { adjustCommandToAPI, getAPI } from "./utils/platformUtils";
+// import { clamp, waitForMe } from "./utils/miscUtils";
+import { FullDeviceInformation, DeviceAPI, IAnimationColorStep } from "../models/types";
+import { adjustCommandToAPI, getAPI } from "../utils/platformUtils";
 
-const { POWER, ANIMATION_FRAME, QUERY_STATE, LED } = CommandType;
+const { POWER, ANIMATION_FRAME, LED } = CommandType;
 
 const DEFAULT_COMMAND_OPTIONS: CommandOptions = {
   waitForResponse: true,
@@ -50,15 +46,17 @@ export class BaseController {
     };
   }
 
+  private _deviceManager: DeviceManager | null = null;
   get deviceManager(): DeviceManager {
-    return this.deviceManager;
+    if (this._deviceManager === null) throw Error("DeviceManager is null");
+    return this._deviceManager;
   }
   private set deviceManager(deviceManager: DeviceManager) {
-    this.deviceManager = deviceManager;
+    this._deviceManager = deviceManager;
   }
 
   public manuallyControlled: boolean = false;
-  public id: string;
+  public id: string | null = null;
   // first: boolean = true;
   // initalized: boolean;
   protected animationList: string[] = [];
@@ -66,9 +64,9 @@ export class BaseController {
   //=================================================
   // Start Constructor //
   constructor(protected deviceBundle: DeviceBundle) {
+    this.deviceManager = deviceBundle.deviceManager;
     this.deviceState = cloneDeep<DeviceState>(deviceBundle.completeDevice.fetchStateResponse.deviceState);
     this.deviceAPI = getAPI(deviceBundle.completeDevice.fetchStateResponse.deviceMetaData);
-    this.lastOutboundCommand = cloneDeep<DeviceState>(this.deviceState);
   }
   //=================================================
   // End Constructor //
@@ -105,8 +103,9 @@ export class BaseController {
   }
 
   private async sendCommand(deviceCommand: DeviceCommand, commandOptions: CommandOptions) {
-    mergeDeep(this.lastOutboundCommand, deviceCommand);
     const newDeviceCommand: DeviceCommand = adjustCommandToAPI(deviceCommand, commandOptions, this.deviceAPI);
+    mergeDeep(this.lastOutboundCommand, newDeviceCommand);
+    // console.log("Sending Command: ", newDeviceCommand);
     // this.precheckPowerState(deviceCommand, commandOptions);
 
     const completeResponse: CompleteResponse = await this.deviceManager.sendCommand(newDeviceCommand, commandOptions);
@@ -172,8 +171,9 @@ export class BaseController {
       warmWhite: 0,
       coldWhite: 0,
     };
+ 
     for (const colorKey in color) {
-      COLOR[colorKey] = color[colorKey];
+      COLOR[colorKey as keyof IAnimationColorStep] = color[colorKey  as keyof IAnimationColorStep];
     }
 
     const deviceCommand: DeviceCommand = {

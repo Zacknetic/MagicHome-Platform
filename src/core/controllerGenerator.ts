@@ -1,6 +1,5 @@
-import { DeviceAPI, IFailedDeviceProps, } from './models/types';
-import { BaseController } from './BaseController';
-import { discoverProtoDevices } from './utils/platformUtils';
+import { BaseController } from './baseController';
+import { discoverProtoDevices } from '../utils/platformUtils';
 import { DeviceBundle, InterfaceOptions, ProtoDevice, generateDeviceBundles } from 'magichome-core';
 
 
@@ -8,7 +7,7 @@ import { DeviceBundle, InterfaceOptions, ProtoDevice, generateDeviceBundles } fr
  * 
  */
 export class ControllerGenerator {
-	public customControllers: Map<string, BaseController>;
+	// public customControllers: Map<string, BaseController>;
 	// public inactiveDeviceQueue: IFailedDeviceProps[] = [];
 	private interfaceOptions: InterfaceOptions = { timeoutMS: 700 };
 	constructor() { }
@@ -54,6 +53,11 @@ export class ControllerGenerator {
 		for (const deviceBundle of deviceBundles) {
 			const uniqueId: string = deviceBundle.completeDevice.protoDevice.uniqueId;
 			const baseController: BaseController = new BaseController(deviceBundle);
+			if(!baseController) {
+				console.error('Error creating base controller for device:', deviceBundle.completeDevice.protoDevice);
+				continue;
+			}
+
 			baseControllers.set(uniqueId, baseController)
 		}
 

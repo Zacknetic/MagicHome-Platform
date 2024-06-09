@@ -9,10 +9,10 @@ export class AnimationManager {
     private lightMap: Map<BaseController['id'], LightMapValue>;
     private animationLoops: AnimationLoop[];
     private animationBlueprints: IAnimationBlueprint[];
-    private startTime: number;
+    private startTime: number = 0;
     private STEP_INTERVAL_MS: number;
     private numActiveAnimations: number;
-    private ticksActive: boolean;
+    private ticksActive: boolean = false;
 
     private constructor(controllers: BaseController[], animationBlueprints: IAnimationBlueprint[], STEP_INTERVAL_MS: number = 20) {
         this.lightMap = new Map();
@@ -25,11 +25,11 @@ export class AnimationManager {
     }
 
     public static getInstance(controllers?: BaseController[], animationBlueprints?: IAnimationBlueprint[], STEP_INTERVAL_MS: number = 20): AnimationManager {
-        if (this.instance === null) {
+        if (this.instance === null && controllers && animationBlueprints) {
             this.instance = new AnimationManager(controllers, animationBlueprints, STEP_INTERVAL_MS);
         }
 
-        return this.instance;
+        return this.instance as AnimationManager;
     }
 
     public isAnimationLoopActiveByName(animationName: string): boolean {
@@ -157,14 +157,16 @@ export class AnimationManager {
         return step !== undefined && Math.max(...Object.values(step)) > 0;
     }
 
+
+
     private getDefaultStep(): IAnimationColorStep {
         return { red: 0, green: 0, blue: 0, warmWhite: 0, coldWhite: 0 };
     }
 
     private roundStepValues(step: IAnimationColorStep): IAnimationColorStep {
-        const roundedStep = { ...step };
+        const roundedStep: IAnimationColorStep = { ...step };
         for (const key in roundedStep) {
-            roundedStep[key] = Math.ceil(roundedStep[key]);
+            roundedStep[key as keyof IAnimationColorStep] = Math.ceil(roundedStep[key as keyof IAnimationColorStep]);
         }
         return roundedStep;
     }

@@ -1,4 +1,4 @@
-import { IAnimationColorStep, IAnimationSequenceStep } from "..";
+import { IAnimationColorStep, IAnimationSequenceRange, IAnimationSequenceStep } from "..";
 
 
 export function interpolate(start: number, end: number, current: number, total: number, type: InterpolationType) {
@@ -77,7 +77,7 @@ export function interpolate(start: number, end: number, current: number, total: 
     } else if (type === 'easeOutInElastic') {
       return start + (end - start) * Math.pow(2, 10 * (current / total - 1)) * Math.cos((current / total - 1.075) * (2 * Math.PI) / 0.3) / 2;
     } else if (type === 'easeInBounce') {
-      return start + (end - start) - easeOutBounce(end - start, total - current, 0, end - start, total);
+      return start + (end - start) - easeOutBounce(end - start, total - current, end - start, total);
     } else if (type === 'easeOutBounce') {
       if ((current /= total) < (1 / 2.75)) {
         return start + (end - start) * (7.5625 * current * current);
@@ -90,23 +90,23 @@ export function interpolate(start: number, end: number, current: number, total: 
       }
     } else if (type === 'easeInOutBounce') {
       if (current < total / 2) {
-        return easeInBounce(start, current * 2, 0, end - start, total) * 0.5 + start;
+        return easeInBounce(start, current * 2, end - start, total) * 0.5 + start;
       } else {
   
-        return easeOutBounce(start + (end - start) / 2, current * 2 - total, 0, end - start, total) * 0.5 + start + (end - start) / 2;
+        return easeOutBounce(start + (end - start) / 2, current * 2 - total, end - start, total) * 0.5 + start + (end - start) / 2;
       }
     } else if (type === 'easeOutInBounce') {
       if (current < total / 2) {
-        return easeOutBounce(start, current * 2, 0, end - start, total) * 0.5 + start;
+        return easeOutBounce(start, current * 2, end - start, total) * 0.5 + start;
       } else {
-        return easeInBounce(start + (end - start) / 2, current * 2 - total, 0, end - start, total) * 0.5 + start + (end - start) / 2;
+        return easeInBounce(start + (end - start) / 2, current * 2 - total, end - start, total) * 0.5 + start + (end - start) / 2;
       }
     } else {
       return start + (end - start) * current / total;
     }
   }
   
-  function easeOutBounce(start: number, current: number, unknown: number, end: number, total: number) {
+  function easeOutBounce(start: number, current: number, end: number, total: number) {
     if ((current /= total) < (1 / 2.75)) {
       return start + (end - start) * (7.5625 * current * current);
     } else if (current < (2 / 2.75)) {
@@ -118,8 +118,8 @@ export function interpolate(start: number, end: number, current: number, total: 
     }
   }
   
-  function easeInBounce(start: number, current: number, unknown: number, end: number, total: number) {
-    return start + (end - start) - easeOutBounce(end - start, total - current, 0, end - start, total);
+  function easeInBounce(start: number, current: number, end: number, total: number) {
+    return start + (end - start) - easeOutBounce(end - start, total - current, end - start, total);
   }
   
   export enum InterpolationType {
@@ -170,30 +170,39 @@ export function interpolate(start: number, end: number, current: number, total: 
     EASE_OUT_IN_BOUNCE = "easeOutInBounce"
   }
   
-  export function recursiveArrayToInt<Type>(objOne, objTarget = {}): Type {
-    for (var k in objOne) {
-        if (typeof objOne[k] == "object" && objOne[k] !== null && !Array.isArray(objOne[k])) {
-            objTarget[k] = {};
-            objTarget[k] = recursiveArrayToInt(objOne[k], objTarget[k]);
-        } else if (Array.isArray(objOne[k])) {
-            objTarget[k] = Math.round(Math.random() * (objOne[k][1] - objOne[k][0]) + objOne[k][0]);
-        } else {
-            objTarget[k] = objOne[k];
-        }
+   //@ts-ignore
+    export function recursiveArrayToInt<T>(objOne: IAnimationSequenceRange, objTarget: {[key: string]: any} = {}): T {
+    for (let k in objOne) {
+      const element = objOne[k as keyof typeof objOne];
+
+      if (typeof element == "object" && element !== null && !Array.isArray(element)) {
+        objTarget[k] = {};
+           //@ts-ignore
+        objTarget[k] = recursiveArrayToInt<T>(objOne[k], objTarget[k]);
+           //@ts-ignore
+      } else if (Array.isArray(objOne[k])) {
+           //@ts-ignore
+        objTarget[k] = Math.round(Math.random() * (objOne[k][1] - objOne[k][0]) + objOne[k][0]);
+      } else {
+           //@ts-ignore
+        objTarget[k] = objOne[k];
+      }
     }
-    return objTarget as Type;
-  }
+    return objTarget as T;
+    }
   
   export function calculateSequenceSteps(sequence: IAnimationSequenceStep, STEP_INTERVAL_MS: number): IAnimationColorStep[] {
   
     const animationSteps: IAnimationColorStep[] = [];
     const transitionFrames = sequence.transitionDurationMS / STEP_INTERVAL_MS;
     sequence.durationAtTargetMS = sequence.durationAtTargetMS || 0;
+    //@ts-ignore
     const reverseTransitionFrames = sequence.reverseTransitionDurationMS / STEP_INTERVAL_MS;
   
     //calculate transition delta
     const transitionDelta = {};
     for (let color in sequence.targetColor) {
+         //@ts-ignore
         transitionDelta[color] = (sequence.targetColor[color] - sequence.startColor[color]) / transitionFrames;
     }
   
@@ -201,6 +210,7 @@ export function interpolate(start: number, end: number, current: number, total: 
     for (let i = 0; i < transitionFrames; i++) {
         const step = {};
         for (let color in sequence.targetColor) {
+             //@ts-ignore
             step[color] = interpolate(sequence.startColor[color], sequence.targetColor[color], i, transitionFrames, sequence.interpolationType);
         }
         animationSteps.push(step as IAnimationColorStep);
@@ -211,6 +221,7 @@ export function interpolate(start: number, end: number, current: number, total: 
     for (let i = 0; i < durationFrames; i++) {
         const step = {};
         for (let color in sequence.targetColor) {
+             //@ts-ignore
             step[color] = sequence.targetColor[color];
         }
         animationSteps.push(step as IAnimationColorStep);
@@ -221,6 +232,7 @@ export function interpolate(start: number, end: number, current: number, total: 
     for (let i = 0; i < reverseTransitionFrames; i++) {
         const step = {};
         for (let color in sequence.targetColor) {
+             //@ts-ignore
             step[color] = interpolate(sequence.targetColor[color], sequence.startColor[color], i, reverseTransitionFrames, sequence.interpolationType);
         }
         animationSteps.push(step as IAnimationColorStep);

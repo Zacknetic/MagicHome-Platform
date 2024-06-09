@@ -1,7 +1,7 @@
-import { COLOR_MASKS, IColorCCT, IColorRGB, ICompleteResponse, IDeviceCommand, IDeviceState } from "magichome-core";
+import {  IColorCCT, ColorRGB  } from "magichome-core";
 import { IColorHSV, IColorTB } from "../models/types";
 
-export function convertCCTValueToDualWhite(_cctValue) {
+export function convertCCTValueToDualWhite(_cctValue: number) {
   const cctValue = _cctValue - 140;
   let multiplier = 0;
   const CCT = { warmWhite: 0, coldWhite: 0 };
@@ -45,7 +45,7 @@ export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function HSVtoRGB(HSV: IColorHSV): IColorRGB {
+export function HSVtoRGB(HSV: IColorHSV): ColorRGB {
   const { hue, saturation, value }: IColorHSV = HSV;
   let [H, S, V] = [hue, saturation, value];
   H = clamp(H, 0, 360);
@@ -57,8 +57,7 @@ export function HSVtoRGB(HSV: IColorHSV): IColorRGB {
   const C = V * S;
   const X = C * (1 - Math.abs(((H / 60) % 2) - 1));
   const m = V - C;
-
-  let order;
+  let order: number[] = []; // Initialize order as an empty array
   if (H < 60) order = [C, X, 0];
   else if (H < 120) order = [X, C, 0];
   else if (H < 180) order = [0, C, X];
@@ -66,14 +65,15 @@ export function HSVtoRGB(HSV: IColorHSV): IColorRGB {
   else if (H < 300) order = [X, 0, C];
   else if (H <= 360) order = [C, 0, X];
 
-  const [dR, dG, dB] = order;
+
+  const [dR, dG, dB] = order as [number, number, number];
   const [red, green, blue] = [Math.round((dR + m) * 255), Math.round((dG + m) * 255), Math.round((dB + m) * 255)];
 
   return { red, green, blue };
 }
 
-export function RGBtoHSV(RGB: IColorRGB): IColorHSV {
-  const { red, green, blue }: IColorRGB = RGB;
+export function RGBtoHSV(RGB: ColorRGB): IColorHSV {
+  const { red, green, blue }: ColorRGB = RGB;
 
 
   const [R, G, B] = [red, green, blue];

@@ -16,8 +16,8 @@ export class AnimationLoop {
     private lightOffsetDurationMS: number;
     readonly blueprintAnimationSequences: IAnimationSequenceRange[];
     readonly isSingularAnimationLoop: boolean;
-    private currentAnimationOffsetDurationMS: number;
-    private activeLoops: Map<AnimationStepKeys, ActiveLoopValue>;
+    private currentAnimationOffsetDurationMS: number = 0;
+    private activeLoops: Map<AnimationStepKeys, ActiveLoopValue> = new Map();
     private STEP_INTERVAL_MS: number;
     associatedLightCount: number;
     public isActive: boolean;
@@ -46,9 +46,10 @@ export class AnimationLoop {
     public getAnimationStep(lightID: BaseController['id']): IAnimationColorStep {
         const animationID: AnimationStepKeys = this.isSingularAnimationLoop ? AnimationStepKey.ALL : lightID;
         const activeAnimation = this.activeLoops.get(animationID);
+        if(!activeAnimation) throw new Error(`No active animation found for lightID: ${lightID}`);
         const offsetIndex = this.calculateOffsetIndex(activeAnimation);
 
-        return activeAnimation.animationSteps[offsetIndex];
+        return activeAnimation.animationSteps[offsetIndex] as IAnimationColorStep;
     }
 
     private calculateOffsetIndex(activeAnimation: ActiveLoopValue): number {
@@ -83,7 +84,7 @@ export class AnimationLoop {
     private tickAnimation(animationID: AnimationStepKeys) {
         if (this.associatedLightCount === 0) return;
 
-        const activeAnimation = this.activeLoops.get(animationID);
+        const activeAnimation = this.activeLoops.get(animationID) as ActiveLoopValue;
         activeAnimation.currentStepIndex++;
         if (activeAnimation.currentStepIndex < 0 || activeAnimation.currentStepIndex >= activeAnimation.animationSteps.length) {
             this.generateAnimationSteps(animationID);
@@ -91,18 +92,18 @@ export class AnimationLoop {
     }
 
     private generateAnimationSteps(animationID: AnimationStepKeys): void {
-        const activeAnimation = this.activeLoops.get(animationID);
+        const activeAnimation = this.activeLoops.get(animationID) as ActiveLoopValue;
         activeAnimation.currentStepIndex = 0;
         let previousSequenceEndStep: IAnimationColorStep = activeAnimation.previousLoopEndStep || { red: 0, green: 0, blue: 0, warmWhite: 0, coldWhite: 0 };
 
-        const animationSteps: IAnimationColorStep[] = this.blueprintAnimationSequences.reduce((acc, sequence) => {
+        const animationSteps: IAnimationColorStep[] = this.blueprintAnimationSequences.reduce((acc: IAnimationColorStep[], sequence) => {
             if (Math.random() < sequence.skipChance) return acc;
 
             const flatSequence = recursiveArrayToInt<IAnimationSequenceStep>(sequence);
             flatSequence.startColor = flatSequence.startColor || previousSequenceEndStep;
             const steps = calculateSequenceSteps(flatSequence, this.STEP_INTERVAL_MS);
 
-            previousSequenceEndStep = steps[steps.length - 1];
+            previousSequenceEndStep = steps[steps.length - 1] || previousSequenceEndStep;
             return [...acc, ...steps];
         }, []);
 
@@ -115,7 +116,7 @@ export class AnimationLoop {
             this.activeLoops.set(animationID, {
                 currentStepIndex: -2,
                 animationSteps: [],
-                previousLoopEndStep: null,
+                previousLoopEndStep: { red: 0, green: 0, blue: 0, warmWhite: 0, coldWhite: 0},
                 offsetDurationMS: this.currentAnimationOffsetDurationMS,
             });
             this.currentAnimationOffsetDurationMS += this.lightOffsetDurationMS;

@@ -8,31 +8,31 @@ export class Logs {
     logs = this;
   }
 
-  trace(message, ...parameters: any[]) {
+  trace(message: string, ...parameters: any[]) {
     if (this.logLevel == 5) {
       console.info(message, ...parameters);
     }
   }
 
-  debug(message, ...parameters: any[]) {
+  debug(message: string, ...parameters: any[]) {
     if (this.logLevel >= 4) {
       console.info(message, ...parameters);
     }
   }
 
-  info(message, ...parameters: any[]) {
+  info(message: string, ...parameters: any[]) {
     if (this.logLevel >= 3) {
       console.info(message, ...parameters);
     }
   }
 
-  warn(message, ...parameters: any[]) {
+  warn(message: string, ...parameters: any[]) {
     if (this.logLevel >= 2) {
       console.info(message, ...parameters);
     }
   }
 
-  error(message, ...parameters: any[]) {
+  error(message: string, ...parameters: any[]) {
     if (this.logLevel >= 1) {
       console.info(message, ...parameters);
     }

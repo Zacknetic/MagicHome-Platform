@@ -10,7 +10,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
       hasColor: true,
       hasCCT: true,
       hasBrightness: true,
-      isEightByteProtocol: true,
+      isEightByteProtocol: true, //todo: check this
       needsPowerCommand: false,
     },
   ],
@@ -23,7 +23,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
       hasColor: true,
       hasCCT: true,
       hasBrightness: true,
-      isEightByteProtocol: null,
+      isEightByteProtocol: false,
       needsPowerCommand: null,
     },
   ],
@@ -62,7 +62,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
       hasColor: false,
       hasCCT: true,
       hasBrightness: true,
-      isEightByteProtocol: null,
+      isEightByteProtocol: false, //todo: check this
       needsPowerCommand: null,
     },
   ],
@@ -114,7 +114,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
       hasColor: false,
       hasCCT: false,
       hasBrightness: true,
-      isEightByteProtocol: null,
+      isEightByteProtocol: true, //todo: check this
       needsPowerCommand: null,
     },
   ],
@@ -153,7 +153,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
       hasColor: false,
       hasCCT: false,
       hasBrightness: true,
-      isEightByteProtocol: null,
+      isEightByteProtocol: true, //todo: check this
       needsPowerCommand: null,
     },
   ],
@@ -166,7 +166,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
       hasColor: false,
       hasCCT: false,
       hasBrightness: false,
-      isEightByteProtocol: null,
+      isEightByteProtocol: true, //todo: check this
       needsPowerCommand: null,
     },
   ],
@@ -179,7 +179,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
       hasColor: false,
       hasCCT: false,
       hasBrightness: false,
-      isEightByteProtocol: null,
+      isEightByteProtocol: true, //todo: check this
       needsPowerCommand: null,
     },
   ],
@@ -192,7 +192,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
-      isEightByteProtocol: null,
+      isEightByteProtocol: true, //todo: check this
       needsPowerCommand: null,
     },
   ],
@@ -205,7 +205,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
       hasColor: true,
       hasCCT: false,
       hasBrightness: true,
-      isEightByteProtocol: null,
+      isEightByteProtocol: true, //todo: check this
       needsPowerCommand: null,
     },
   ],
@@ -237,6 +237,6 @@ export function getUniqueIdName(uniqueId: string, controllerLogicType: string | 
   return `${deviceType} ${uniqueIdTruc}`;
 }
 
-function isType(a, b) {
+function isType(a: string, b: string) {
   return a.toLowerCase().indexOf(b) > -1;
 }

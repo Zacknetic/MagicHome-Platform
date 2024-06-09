@@ -1,7 +1,7 @@
 import { ProtoDevice, DeviceState, DeviceMetaData } from 'magichome-core';
-import { BaseController } from '../BaseController';
+import { BaseController } from '../core/baseController';
 import { InterpolationType } from '../animation/animationUtils';
-
+export * from 'magichome-core';
 /*----------------------[Constants]----------------------*/
 
 
@@ -34,7 +34,7 @@ export type DeviceAPI = {
     hasCCT: boolean;
     hasBrightness: boolean;
     isEightByteProtocol: boolean;
-    needsPowerCommand?: boolean;
+    needsPowerCommand: boolean | null;
     simultaneousCCT: boolean;
 }
 
