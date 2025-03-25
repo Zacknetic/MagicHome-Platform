@@ -136,7 +136,6 @@ export class AnimationManager {
     private tickLights() {
         this.lightMap.forEach((light) => {
             if (light.controller.manuallyControlled) return;
-
             const nextAnimation = this.getNextAnimation(light);
             const currentStep = nextAnimation ? nextAnimation.getAnimationStep(light.id) : this.getDefaultStep();
             light.controller.setLEDColorAnimation(this.roundStepValues(currentStep));

@@ -1,6 +1,7 @@
-export * from './models/types';
-export * from './models/errorTypes';
-export { AnimationManager } from './animation/animationManager';
-export * from './animation/animationLibrary';
-export { ControllerGenerator } from './core/controllerGenerator';
-export { BaseController } from './core/baseController';
+export * from "./models/types";
+export * from "./models/errorTypes";
+export { AnimationManager } from "./animation/animationManager";
+export * from "./animation/animationLibrary";
+export * from "./core/controllerGenerator";
+export * from "./core/baseController";
+export { RGBtoHSV } from "./utils/colorConversions";

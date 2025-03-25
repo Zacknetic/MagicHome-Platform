@@ -13,15 +13,14 @@ import {
   FetchStateResponse,
 } from "magichome-core";
 
-// import { clamp, waitForMe } from "./utils/miscUtils";
 import { FullDeviceInformation, DeviceAPI, IAnimationColorStep } from "../models/types";
 import { adjustCommandToAPI, getAPI } from "../utils/platformUtils";
 
 const { POWER, ANIMATION_FRAME, LED } = CommandType;
 
 const DEFAULT_COMMAND_OPTIONS: CommandOptions = {
-  waitForResponse: true,
-  maxRetries: 5,
+  waitForResponse: false,
+  maxRetries: 0,
   commandType: LED,
   isEightByteProtocol: false,
   colorAssist: true,
@@ -57,8 +56,6 @@ export class BaseController {
 
   public manuallyControlled: boolean = false;
   public id: string | null = null;
-  // first: boolean = true;
-  // initalized: boolean;
   protected animationList: string[] = [];
 
   //=================================================
@@ -67,6 +64,7 @@ export class BaseController {
     this.deviceManager = deviceBundle.deviceManager;
     this.deviceState = cloneDeep<DeviceState>(deviceBundle.completeDevice.fetchStateResponse.deviceState);
     this.deviceAPI = getAPI(deviceBundle.completeDevice.fetchStateResponse.deviceMetaData);
+    this.id = deviceBundle.completeDevice.protoDevice.uniqueId;
   }
   //=================================================
   // End Constructor //
@@ -95,6 +93,7 @@ export class BaseController {
       DEFAULT_COMMAND_OPTIONS, {
       isEightByteProtocol: this.deviceAPI.isEightByteProtocol,
       commandType,
+
     });
 
     if (maxRetries > 0) commandOptions = combineDeep<CommandOptions>(commandOptions, { maxRetries, waitForResponse: true });
@@ -106,7 +105,7 @@ export class BaseController {
     const newDeviceCommand: DeviceCommand = adjustCommandToAPI(deviceCommand, commandOptions, this.deviceAPI);
     mergeDeep(this.lastOutboundCommand, newDeviceCommand);
     // console.log("Sending Command: ", newDeviceCommand);
-    // this.precheckPowerState(deviceCommand, commandOptions);
+    // this.checkPowerState(deviceCommand, commandOptions);
 
     const completeResponse: CompleteResponse = await this.deviceManager.sendCommand(newDeviceCommand, commandOptions);
     if (completeResponse.fetchStateResponse?.deviceState) this.overwriteLocalState(completeResponse.fetchStateResponse.deviceState);
@@ -164,6 +163,7 @@ export class BaseController {
 
 
   setLEDColorAnimation(color: IAnimationColorStep): void {
+    // console.log(this.fullDeviceInformation.protoDevice.)
     const COLOR = {
       red: 0,
       green: 0,
@@ -190,10 +190,12 @@ export class BaseController {
       colorAssist: true,
     };
 
+  
+
     this.sendCommand(deviceCommand, commandOptions);
   }
 
-  // private async precheckPowerState(deviceCommand: DeviceCommand, commandOptions: CommandOptions) {
+  // private async checkPowerState(deviceCommand: DeviceCommand, commandOptions: CommandOptions) {
   //   if (this.first && this.deviceAPI.needsPowerCommand && !this.deviceState.isOn && deviceCommand.isOn) {
   //     this.setOn(true);
   //     await this.deviceManager.sendCommand(

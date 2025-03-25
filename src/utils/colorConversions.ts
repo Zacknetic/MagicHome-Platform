@@ -79,18 +79,18 @@ export function RGBtoHSV(RGB: ColorRGB): IColorHSV {
   const [R, G, B] = [red, green, blue];
   const [dR, dG, dB] = [R / 255, G / 255, B / 255];
 
-  const Dmax = Math.max(dR, dG, dB);
-  const Dmin = Math.min(dR, dG, dB);
-  const D = Dmax - Dmin;
+  const dMax = Math.max(dR, dG, dB);
+  const dMin = Math.min(dR, dG, dB);
+  const D = dMax - dMin;
 
   let H, S, V;
   if (D === 0) H = 0;
-  else if (Dmax === dR) H = ((dG - dB) / D) % 6;
-  else if (Dmax === dG) H = (dB - dR) / D + 2;
+  else if (dMax === dR) H = ((dG - dB) / D) % 6;
+  else if (dMax === dG) H = (dB - dR) / D + 2;
   else H = (dR - dG) / D + 4;
   H *= 60;
   if (H < 0) H += 360;
-  V = Dmax;
+  V = dMax;
   if (V === 0) S = 0;
   else S = D / V;
 
@@ -135,7 +135,7 @@ export function TBtoCCT(TB: IColorTB): IColorCCT {
 // ColorConversionUtils.ts
 
 // // RGB to HSV
-// export function RGBStriptoHSV(rgb: { red: number; green: number; blue: number }, previousHue: number): { hue: number; saturation: number; value: number } {
+// export function RGBStripToHSV(rgb: { red: number; green: number; blue: number }, previousHue: number): { hue: number; saturation: number; value: number } {
 //   // Conversion code here
 // }
 

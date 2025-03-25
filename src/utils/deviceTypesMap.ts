@@ -223,7 +223,7 @@ export const matchingFirmwareVersions: Map<number, any> = new Map([
 ])
 
 export function getUniqueIdName(uniqueId: string, controllerLogicType: string | null): string {
-  const uniqueIdTruc = uniqueId.slice(-6);
+  const uniqueIdTrunc = uniqueId.slice(-6);
   let deviceType = 'LED';
   if (controllerLogicType) {
     if (isType(controllerLogicType, 'bulb')) {
@@ -234,7 +234,7 @@ export function getUniqueIdName(uniqueId: string, controllerLogicType: string | 
       deviceType = 'Switch';
     }
   }
-  return `${deviceType} ${uniqueIdTruc}`;
+  return `${deviceType} ${uniqueIdTrunc}`;
 }
 
 function isType(a: string, b: string) {
