@@ -11,13 +11,14 @@ export class ControllerGenerator {
   // public customControllers: Map<string, BaseController>;
   // public inactiveDeviceQueue: IFailedDeviceProps[] = [];
   private interfaceOptions: InterfaceOptions = { timeoutMS: 700 };
+  private _activeControllers: Map<string, BaseController> = new Map();
 
   set activeControllers(activeControllers: Map<string, BaseController>) {
-    this.activeControllers = activeControllers;
+    this._activeControllers = activeControllers;
   }
 
   get activeControllers() {
-    return this.activeControllers;
+    return this._activeControllers;
   }
 
   async getDevices(): Promise<Map<string, BaseController>> {
@@ -81,16 +82,26 @@ export class ControllerGenerator {
     const baseControllers: Map<string, BaseController> = new Map();
     for (const deviceBundle of deviceBundles) {
       const uniqueId: string = deviceBundle.completeDevice.protoDevice.uniqueId;
-      const baseController: BaseController = new BaseController(deviceBundle);
-      if (!baseController) {
+      try {
+        const baseController: BaseController = new BaseController(deviceBundle);
+        if (!baseController) {
+          console.error(
+            "Error creating base controller for device:",
+            deviceBundle.completeDevice.protoDevice
+          );
+          continue;
+        }
+  
+        baseControllers.set(uniqueId, baseController);
+      } catch (error) {
         console.error(
           "Error creating base controller for device:",
-          deviceBundle.completeDevice.protoDevice
+          deviceBundle.completeDevice.protoDevice,
+          error
         );
         continue;
       }
 
-      baseControllers.set(uniqueId, baseController);
     }
 
     return baseControllers;

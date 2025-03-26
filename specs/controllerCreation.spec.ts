@@ -6,7 +6,7 @@ import { ControllerGenerator } from "../src/core/controllerGenerator";
 // import { ICommandOptions, ICommandResponse, IDeviceCommand } from '../types';
 
 import { BaseController } from "../src/core/baseController";
-import { DeviceCommand } from "magichome-core";
+// import { DeviceCommand } from "magichome-core";
 // import { IAnimationLoop } from '../utils/types';
 // import { sleepTimeout } from 'magichome-core/dist/utils/miscUtils';
 // import { Console } from 'console';
@@ -59,13 +59,21 @@ describe("Test the scan function for DeviceDiscovery.ts", function () {
     // console.log("baseControllers", baseControllers);
     //iterate through the controllers and perform the action if the key is either of the two
     for (const [_key, value] of baseControllers) {
-      if (_key == "5CCF7FF72822") {
-        value.setLED({
+      // if (_key == "5CCF7FF72822") {
+        // value.setLEDRGB({
+        //   isOn: true,
+        //   RGB: { red: 255, green: 255, blue: 0 },
+        //   CCT: { warmWhite: 0, coldWhite: 0 },
+        // });
+        value.setLEDHSV({
           isOn: true,
-          RGB: { red: 0, green: 255, blue: 0 },
+          HSV: { hue: 180, saturation: 100, value: 100 },
           CCT: { warmWhite: 0, coldWhite: 0 },
         });
-      }
+        // value.setOn(false);
+      // }
+      //output the api of the controller
+      // console.log("value.deviceAPI", value.fullDeviceInformation.deviceAPI);
  
 
     // if (

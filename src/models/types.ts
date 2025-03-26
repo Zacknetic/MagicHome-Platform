@@ -1,4 +1,4 @@
-import { ProtoDevice, DeviceState, DeviceMetaData } from 'magichome-core';
+import { ProtoDevice, LEDStateRGB, DeviceMetaData } from 'magichome-core';
 import { BaseController } from '../core/baseController';
 import { InterpolationType } from '../animation/animationUtils';
 export * from 'magichome-core';
@@ -41,7 +41,7 @@ export type DeviceAPI = {
 export type FullDeviceInformation = {
     deviceAPI: DeviceAPI;
     protoDevice: ProtoDevice;
-    deviceState: DeviceState;
+    ledStateRGB: LEDStateRGB;
     deviceMetaData: DeviceMetaData
 }
 
@@ -50,13 +50,13 @@ export interface IControllerInformation {
     lastSeenDate: number;
 }
 
-export interface IColorHSV {
+export interface ColorHSV {
 	hue: number;
 	saturation: number;
 	value: number;
 }
 
-export interface IColorTB {
+export interface ColorTB {
 	temperature: number;
 	brightness: number;
 }

@@ -9,7 +9,7 @@ import { IAnimationCommand, DeviceAPI } from "../models/types";
 import {
   ColorMask,
   CommandOptions,
-  DeviceCommand,
+  DeviceCommandRGB,
   DeviceMetaData,
   ProtoDevice,
   discoverDevices,
@@ -40,14 +40,14 @@ export function getAPI(deviceMetaData: DeviceMetaData) {
 }
 
 export function adjustCommandToAPI(
-  deviceCommand: DeviceCommand,
+  deviceCommand: DeviceCommandRGB,
   commandOptions: CommandOptions,
   deviceAPI: DeviceAPI
-): DeviceCommand {
+): DeviceCommandRGB {
   const { byteOrder, simultaneousCCT, hasCCT, hasColor }: DeviceAPI = deviceAPI;
   if (!hasColor || !commandOptions.colorAssist) return deviceCommand;
 
-  let newDeviceCommand: DeviceCommand = cloneDeep<DeviceCommand>(deviceCommand);
+  let newDeviceCommand: DeviceCommandRGB = cloneDeep<DeviceCommandRGB>(deviceCommand);
 
   newDeviceCommand.colorMask = determineColorMask(
     newDeviceCommand,
@@ -62,7 +62,7 @@ export function adjustCommandToAPI(
 }
 
 function determineColorMask(
-  deviceCommand: DeviceCommand,
+  deviceCommand: DeviceCommandRGB,
   simultaneousCCT: boolean,
   hasCCT: boolean
 ): ColorMask {
@@ -88,9 +88,9 @@ function determineColorMask(
 }
 
 function setRGBOrder(
-  deviceCommand: DeviceCommand,
+  deviceCommand: DeviceCommandRGB,
   byteOrder: Array<string>
-): DeviceCommand {
+): DeviceCommandRGB {
   if (byteOrder.length < 3) return deviceCommand;
   const {
     RGB: { red, green, blue },
@@ -116,7 +116,7 @@ function setRGBOrder(
     i++;
   }
 
-  return combineDeep<DeviceCommand>(deviceCommand, {
+  return combineDeep<DeviceCommandRGB>(deviceCommand, {
     RGB: {
       red: colorList[0] || 0,
       green: colorList[1] || 0,
@@ -128,10 +128,10 @@ function setRGBOrder(
 //TODO: these need to be changed so this function is skippable in configuration. This is not the same as the other functions and is more subjective to personal preference
 //this could be done at a device object level which could be enabled/disabled on the fly from a GUI
 function adjustCCT(
-  deviceCommand: DeviceCommand,
+  deviceCommand: DeviceCommandRGB,
   deviceAPI: DeviceAPI
-): DeviceCommand {
-  let newDeviceCommand: DeviceCommand = cloneDeep(deviceCommand);
+): DeviceCommandRGB {
+  let newDeviceCommand: DeviceCommandRGB = cloneDeep(deviceCommand);
   const { byteOrder, simultaneousCCT }: DeviceAPI = deviceAPI;
   const {
     RGB: { red, green, blue },
@@ -167,7 +167,7 @@ function adjustCCT(
   // simultaneousCCT, 4-colors, ColorMask not explicitly defined or is defined as RGB/BOTH
   // (adjusts the color channels to account for the lack of a 2nd white channel by modifying the RGB channels to be cooler)
   else if (byteOrder.length == 4 && simultaneousCCT && coldWhite > 0) {
-    newDeviceCommand = combineDeep<DeviceCommand>(deviceCommand, {
+    newDeviceCommand = combineDeep<DeviceCommandRGB>(deviceCommand, {
       RGB: {
         red: clamp(red + cwAdj, 0, 255),
         green: clamp(green + cwAdj, 0, 255),
@@ -185,7 +185,7 @@ function adjustCCT(
     !simultaneousCCT &&
     colorMask == ColorMask.CCT
   ) {
-    newDeviceCommand = combineDeep<DeviceCommand>(deviceCommand, {
+    newDeviceCommand = combineDeep<DeviceCommandRGB>(deviceCommand, {
       CCT: { warmWhite: Math.max(warmWhite, coldWhite), coldWhite: 0 },
     });
   }
@@ -193,7 +193,7 @@ function adjustCCT(
   // non-simultaneousCCT, 4-colors, ColorMask not explicitly defined or is defined as RGB
   // (adjusts for the lack of simultaneous CCT and RGB by adding adjustments calculated from both warmWhite and coldWhite to the RGB channels)
   else if (!simultaneousCCT && byteOrder.length == 4) {
-    newDeviceCommand = combineDeep<DeviceCommand>(deviceCommand, {
+    newDeviceCommand = combineDeep<DeviceCommandRGB>(deviceCommand, {
       RGB: {
         red: clamp(red + cwAdj + wwRedAdj, 0, 255),
         green: clamp(green + cwAdj + wwGreenAdj, 0, 255),
@@ -206,7 +206,7 @@ function adjustCCT(
   //non-simultaneousCCT, 3-colors, ColorMask not explicitly defined or is defined as RGB
   // (adjusts for the lack of simultaneous CCT and RGB by adding adjustments calculated from both warmWhite and coldWhite to the RGB channels)
   else if (!simultaneousCCT && byteOrder.length == 3) {
-    newDeviceCommand = combineDeep<DeviceCommand>(deviceCommand, {
+    newDeviceCommand = combineDeep<DeviceCommandRGB>(deviceCommand, {
       RGB: {
         red: clamp(red + cwAdj + wwRedAdj, 0, 255),
         green: clamp(green + cwAdj + wwGreenAdj, 0, 255),
@@ -219,7 +219,7 @@ function adjustCCT(
   return newDeviceCommand;
 }
 
-function adjustIsOn(deviceCommand: DeviceCommand): boolean {
+function adjustIsOn(deviceCommand: DeviceCommandRGB): boolean {
   let isOn = false;
   const {
     RGB: { red, green, blue },

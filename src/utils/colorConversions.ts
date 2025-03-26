@@ -1,5 +1,5 @@
-import {  IColorCCT, ColorRGB  } from "magichome-core";
-import { IColorHSV, IColorTB } from "../models/types";
+import {  ColorCCT, ColorRGB  } from "magichome-core";
+import { ColorHSV, ColorTB } from "../models/types";
 
 export function convertCCTValueToDualWhite(_cctValue: number) {
   const cctValue = _cctValue - 140;
@@ -19,7 +19,7 @@ export function convertCCTValueToDualWhite(_cctValue: number) {
   return CCT;
 }
 
-export function CCTtoTB(CCT: IColorCCT): IColorTB {
+export function CCTtoTB(CCT: ColorCCT): ColorTB {
   const { warmWhite, coldWhite } = CCT;
   let temperature = 0;
   let brightness = 0;
@@ -45,8 +45,8 @@ export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-export function HSVtoRGB(HSV: IColorHSV): ColorRGB {
-  const { hue, saturation, value }: IColorHSV = HSV;
+export function HSVtoRGB(HSV: ColorHSV): ColorRGB {
+  const { hue, saturation, value }: ColorHSV = HSV;
   let [H, S, V] = [hue, saturation, value];
   H = clamp(H, 0, 360);
   S = clamp(S, 0, 100);
@@ -72,7 +72,7 @@ export function HSVtoRGB(HSV: IColorHSV): ColorRGB {
   return { red, green, blue };
 }
 
-export function RGBtoHSV(RGB: ColorRGB): IColorHSV {
+export function RGBtoHSV(RGB: ColorRGB): ColorHSV {
   const { red, green, blue }: ColorRGB = RGB;
 
 
@@ -100,7 +100,7 @@ export function RGBtoHSV(RGB: ColorRGB): IColorHSV {
   return { hue: H, saturation: S, value: V };
 }
 
-export function TBtoCCT(TB: IColorTB): IColorCCT {
+export function TBtoCCT(TB: ColorTB): ColorCCT {
   let multiplier = 1;
   let warmWhite = 0,
     coldWhite = 0;
