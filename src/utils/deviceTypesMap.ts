@@ -4,7 +4,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
   [
     0x04,
     {
-      description: 'RGBW Simultaneous',
+      description: 'RGBW Strip',
       byteOrder: ['r', 'g', 'b', 'ww'],
       simultaneousCCT: true,
       hasColor: true,
@@ -17,7 +17,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
   [
     0x06,
     {
-      description: 'RGBW Simultaneous',
+      description: 'RGBW Strip',
       byteOrder: ['r', 'g', 'b', 'ww'],
       simultaneousCCT: true,
       hasColor: true,
@@ -30,7 +30,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
   [
     0x07,
     {
-      description: 'RGBWW Simultaneous',
+      description: 'RGBCCT Strip',
       byteOrder: ['r', 'g', 'b', 'ww', 'cw'],
       simultaneousCCT: true,
       hasColor: true,
@@ -69,7 +69,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
   [
     0x25,
     {
-      description: 'RGBWW Simultaneous',
+      description: 'RGBCCT Strip',
       byteOrder: ['r', 'g', 'b', 'ww', 'cw'],
       simultaneousCCT: true,
       hasColor: true,
@@ -95,7 +95,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
   [
     0x35,
     {
-      description: 'RGBWW Non-Simultaneous',
+      description: 'RGBCCT Bulb',
       byteOrder: ['r', 'g', 'b', 'ww', 'cw'],
       simultaneousCCT: false,
       hasColor: true,
@@ -121,7 +121,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
   [
     0x44,
     {
-      description: 'RGBW Non-Simultaneous',
+      description: 'RGBW Bulb',
       byteOrder: ['r', 'g', 'b', 'ww'],
       simultaneousCCT: false,
       hasColor: true,
@@ -134,7 +134,7 @@ export const deviceTypesMap: Map<number, DeviceAPI> = new Map([
   [
     0x52,
     {
-      description: 'RGBWW Non-Simultaneous',
+      description: 'RGBCCT Bulb',
       byteOrder: ['r', 'g', 'b', 'ww', 'cw'],
       simultaneousCCT: false,
       hasColor: true,

@@ -16,11 +16,11 @@ import {
 } from "magichome-core";
 import { NoMatchingAPIError } from "../models/errorTypes";
 
-export async function discoverProtoDevices(): Promise<ProtoDevice[]> {
-  let discoveredDevices: ProtoDevice[] = await discoverDevices(1000);
+export async function discoverProtoDevices(subnets: string[]): Promise<ProtoDevice[]> {
+  let discoveredDevices: ProtoDevice[] = await discoverDevices(1000, subnets);
   for (let scans = 0; scans < 5; scans++) {
     if (discoveredDevices.length > 0) break;
-    discoveredDevices = await discoverDevices(1000);
+    discoveredDevices = await discoverDevices(1000, subnets);
   }
 
   return discoveredDevices;

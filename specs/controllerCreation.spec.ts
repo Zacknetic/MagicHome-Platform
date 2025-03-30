@@ -6,6 +6,8 @@ import { ControllerGenerator } from "../src/core/controllerGenerator";
 // import { ICommandOptions, ICommandResponse, IDeviceCommand } from '../types';
 
 import { BaseController } from "../src/core/baseController";
+import { cloneDeep,  smartCombineUsingGuide } from "magichome-core/dist/utils";
+import { DeviceCommandHSV } from "../dist";
 // import { DeviceCommand } from "magichome-core";
 // import { IAnimationLoop } from '../utils/types';
 // import { sleepTimeout } from 'magichome-core/dist/utils/miscUtils';
@@ -21,7 +23,7 @@ const controllerGenerator = new ControllerGenerator();
 describe("Test the scan function for DeviceDiscovery.ts", function () {
   this.beforeAll(async function () {
     try {
-      const ret = await controllerGenerator.getDevices();
+      const ret = await controllerGenerator.getDevices([]);
       // if (ret.length != protoDevices.length) // throw new Error("Every proto-device did not retrieve meta-data successfully");
     } catch (error) {
       console.error(error);
@@ -52,51 +54,69 @@ describe("Test the scan function for DeviceDiscovery.ts", function () {
   //     }
   // })
   it("turn on a light", async function () {
+    const guide: DeviceCommandHSV = {
+      isOn: false,
+      HSV: { hue: 0, saturation: 0, value: 0 },
+      CCT: { warmWhite: 0, coldWhite: 0 },
+      colorMask: 0
+    };
+    
+    const result = smartCombineUsingGuide<DeviceCommandHSV>(
+      guide,
+      { hue: 250 },
+      { saturation: 80 },
+      { warmWhite: 200 },
+      { isOn: false }
+    );
+    
+    console.log(JSON.stringify(result, null, 2));
+    console.log(JSON.stringify(guide, null, 2));
+
     // for(const [_key, value] of baseControllers) {
     //     value.setLED({ isOn: true, RGB: { red: 255, green: 0, blue: 25 }, CCT: { warmWhite: 1, coldWhite: 1 }})
-    // }
-    const baseControllers = await controllerGenerator.getDevices();
-    // console.log("baseControllers", baseControllers);
-    //iterate through the controllers and perform the action if the key is either of the two
-    for (const [_key, value] of baseControllers) {
-      // if (_key == "5CCF7FF72822") {
-        // value.setLEDRGB({
-        //   isOn: true,
-        //   RGB: { red: 255, green: 255, blue: 0 },
-        //   CCT: { warmWhite: 0, coldWhite: 0 },
-        // });
-        value.setLEDHSV({
-          isOn: true,
-          HSV: { hue: 180, saturation: 100, value: 100 },
-          CCT: { warmWhite: 0, coldWhite: 0 },
-        });
-        // value.setOn(false);
-      // }
-      //output the api of the controller
-      // console.log("value.deviceAPI", value.fullDeviceInformation.deviceAPI);
+    // // }
+    // const baseControllers = await controllerGenerator.getDevices();
+    // // console.log("baseControllers", baseControllers);
+    // //iterate through the controllers and perform the action if the key is either of the two
+    // for (const [_key, value] of baseControllers) {
+    //   // if (_key == "5CCF7FF72822") {
+    //     // value.setLEDRGB({
+    //     //   isOn: true,
+    //     //   RGB: { red: 255, green: 255, blue: 0 },
+    //     //   CCT: { warmWhite: 0, coldWhite: 0 },
+    //     // });
+    //     value.setLEDHSV({
+    //       isOn: true,
+    //       HSV: { hue: 180, saturation: 100, value: 100 },
+    //       CCT: { warmWhite: 0, coldWhite: 0 },
+    //     });
+    //     // value.setOn(false);
+    //   // }
+    //   //output the api of the controller
+    //   // console.log("value.deviceAPI", value.fullDeviceInformation.deviceAPI);
  
 
-    // if (
-    //   baseControllers.has("DC4F22CF7C31") ||
-    //   baseControllers.has("2CF432B7D7C5")
-    // ) {
-    //   // const a = baseControllers.filter((controller: BaseController) => {
-    //   //     return controller.getCachedDeviceInformation().protoDevice.uniqueId = "DC4F22CF7C31";
-    //   // })
+    // // if (
+    // //   baseControllers.has("DC4F22CF7C31") ||
+    // //   baseControllers.has("2CF432B7D7C5")
+    // // ) {
+    // //   // const a = baseControllers.filter((controller: BaseController) => {
+    // //   //     return controller.getCachedDeviceInformation().protoDevice.uniqueId = "DC4F22CF7C31";
+    // //   // })
 
-    //   const controller: BaseController | undefined =
-    //     baseControllers.get("DC4F22CF7C31");
-    //   const controllerB;
-    //   if (!controller) throw new Error("No controller found");
-    //   const command: DeviceCommand = {
-    //     isOn: true,
-    //     RGB: { red: 0, green: 255, blue: 0 },
-    //     CCT: { warmWhite: 100, coldWhite: 255 },
-    //   };
-    //   await controller.setLED(command);
-    // } else {
-    //   console.log("No controller found");
-    }
+    // //   const controller: BaseController | undefined =
+    // //     baseControllers.get("DC4F22CF7C31");
+    // //   const controllerB;
+    // //   if (!controller) throw new Error("No controller found");
+    // //   const command: DeviceCommand = {
+    // //     isOn: true,
+    // //     RGB: { red: 0, green: 255, blue: 0 },
+    // //     CCT: { warmWhite: 100, coldWhite: 255 },
+    // //   };
+    // //   await controller.setLED(command);
+    // // } else {
+    // //   console.log("No controller found");
+    // }
   });
 
   // it('make colors', function () {

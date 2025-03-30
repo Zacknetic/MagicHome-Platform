@@ -19,27 +19,62 @@ export function convertCCTValueToDualWhite(_cctValue: number) {
   return CCT;
 }
 
-export function CCTtoTB(CCT: ColorCCT): ColorTB {
-  const { warmWhite, coldWhite } = CCT;
-  let temperature = 0;
-  let brightness = 0;
+export function TBtoCCT(tb: ColorTB): ColorCCT {
+  const { temperature, brightness } = tb;
 
-  // Calculate the total CCT value
-  const totalCCT = warmWhite + coldWhite;
+  // Normalize temperature from 140–500 → 0–1
+  const tNorm = (temperature - 140) / (500 - 140);
 
-  // Calculate the temperature based on the total CCT value
-  if (totalCCT <= 255) {
-    temperature = 90 + Math.round((totalCCT / 255) * 90);
-  } else if (totalCCT > 255 && totalCCT <= 510) {
-    temperature = 180 + Math.round(((totalCCT - 255) / 255) * 90);
+  let warmWhite = 0;
+  let coldWhite = 0;
+
+  if (tNorm <= 0.5) {
+    // Cold white is full, warm white ramps up
+    coldWhite = 255;
+    warmWhite = Math.round(255 * (tNorm / 0.5));
+  } else {
+    // Warm white is full, cold white ramps down
+    warmWhite = 255;
+    coldWhite = Math.round(255 * ((1 - tNorm) / 0.5));
   }
 
-  // Calculate the brightness based on the coldWhite value
-  brightness = Math.round(Math.max((coldWhite / 255) * 100, (warmWhite / 255) * 100));
-
-  // Return the temperature and brightness as a TB value
-  return { temperature, brightness };
+  return {
+    warmWhite: Math.round((warmWhite * brightness) / 100),
+    coldWhite: Math.round((coldWhite * brightness) / 100),
+  };
 }
+
+export function CCTtoTB(cct: ColorCCT): ColorTB {
+  const { warmWhite, coldWhite } = cct;
+
+  if (warmWhite === 0 && coldWhite === 0) {
+    return { temperature: 140, brightness: 0 };
+  }
+
+  const brightness = Math.max(warmWhite, coldWhite) / 255 * 100;
+
+  const warmFull = warmWhite / (brightness / 100);
+  const coldFull = coldWhite / (brightness / 100);
+
+  let tNorm = 0;
+
+  if (warmFull >= 255) {
+    tNorm = 1 - (coldFull / 255) * 0.5;
+  } else if (coldFull >= 255) {
+    tNorm = (warmFull / 255) * 0.5;
+  } else {
+    // Fallback (balanced): estimate by warm vs total
+    tNorm = warmFull / (warmFull + coldFull);
+  }
+
+  const temperature = 140 + tNorm * (500 - 140);
+
+  return {
+    temperature: Math.round(temperature),
+    brightness: Math.round(brightness),
+  };
+}
+
 
 export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -100,37 +135,7 @@ export function RGBtoHSV(RGB: ColorRGB): ColorHSV {
   return { hue: H, saturation: S, value: V };
 }
 
-export function TBtoCCT(TB: ColorTB): ColorCCT {
-  let multiplier = 1;
-  let warmWhite = 0,
-    coldWhite = 0;
-  let { temperature, brightness } = TB;
-  temperature -= 140;
 
-  if (temperature <= 90) {
-    //if hue is <= 90, warmWhite value is full and we determine the coldWhite value based on Hue
-    multiplier = temperature / 90;
-    coldWhite = Math.round(255 * multiplier);
-    warmWhite = 255;
-  } else if (temperature > 270) {
-    //if hue is >270, warmWhite value is full and we determine the coldWhite value based on Hue
-    multiplier = 1 - (temperature - 270) / 90;
-    coldWhite = Math.round(255 * multiplier);
-    warmWhite = 255;
-  } else if (temperature > 180 && temperature <= 270) {
-    //if hue is > 180 and <= 270, coldWhite value is full and we determine the warmWhite value based on Hue
-    multiplier = (temperature - 180) / 90;
-    warmWhite = Math.round(255 * multiplier);
-    coldWhite = 255;
-  } else if (temperature > 90 && temperature <= 180) {
-    //if hue is > 90 and <= 180, coldWhite value is full and we determine the warmWhite value based on Hue
-    multiplier = 1 - (temperature - 90) / 90;
-    warmWhite = Math.round(255 * multiplier);
-    coldWhite = 255;
-  }
-  const CCT = { warmWhite: Math.round((warmWhite * brightness) / 100), coldWhite: Math.round((coldWhite * brightness) / 100) };
-  return CCT;
-} //TBtoCCT
 
 // ColorConversionUtils.ts
 

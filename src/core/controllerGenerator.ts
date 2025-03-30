@@ -21,15 +21,15 @@ export class ControllerGenerator {
     return this._activeControllers;
   }
 
-  async getDevices(): Promise<Map<string, BaseController>> {
-    const deviceBundles: DeviceBundle[] = await this.discoverDeviceBundles();
+  async getDevices(subnets: string[]): Promise<Map<string, BaseController>> {
+    const deviceBundles: DeviceBundle[] = await this.discoverDeviceBundles(subnets);
     const activeControllers: Map<string, BaseController> =
       this.generateControllers(deviceBundles);
     return activeControllers;
   }
 
-  async discoverDeviceBundles(): Promise<DeviceBundle[]> {
-    const protoDevices: ProtoDevice[] = await discoverProtoDevices();
+  async discoverDeviceBundles(subnets: string[]): Promise<DeviceBundle[]> {
+    const protoDevices: ProtoDevice[] = await discoverProtoDevices(subnets);
     const deviceBundles: DeviceBundle[] = await generateDeviceBundles(
       protoDevices,
       this.interfaceOptions
@@ -52,9 +52,10 @@ export class ControllerGenerator {
    * @returns
    */
   async scanForUniqueIds(
-    uniqueIds: string[]
+    uniqueIds: string[],
+    subnets: string[] = []
   ): Promise<Map<string, BaseController>> {
-    const protoDevices: ProtoDevice[] = await discoverProtoDevices();
+    const protoDevices: ProtoDevice[] = await discoverProtoDevices(subnets);
     const filteredProtoDevices: ProtoDevice[] = protoDevices.filter(
       (protoDevice: ProtoDevice) => uniqueIds.includes(protoDevice.uniqueId)
     );
