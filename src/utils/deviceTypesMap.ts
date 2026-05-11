@@ -41,6 +41,19 @@ export const deviceTypesMap: Map<number, IDeviceAPI> = new Map([
     },
   ],
   [
+    0x08,
+    {
+      description: 'RGB Strip',
+      byteOrder: ['r', 'g', 'b'],
+      simultaneousCCT: false,
+      hasColor: true,
+      hasCCT: false,
+      hasBrightness: true,
+      isEightByteProtocol: null,
+      needsPowerCommand: null,
+    },
+  ],
+  [
     0x09,
     {
       description: 'CCT Strip',
